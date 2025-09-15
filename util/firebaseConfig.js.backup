@@ -1,0 +1,392 @@
+// IMPORTANT: This must be the first import to avoid crashes
+import "react-native-get-random-values";
+
+// Firebase imports
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
+import {
+  getAuth,
+  initializeAuth,
+  getReactNativePersistence,
+  connectAuthEmulator,
+} from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
+
+// Import environment variables (for local development only)
+import {
+  FIREBASE_API_KEY,
+  FIREBASE_AUTH_DOMAIN,
+  FIREBASE_PROJECT_ID,
+  FIREBASE_STORAGE_BUCKET,
+  FIREBASE_MESSAGING_SENDER_ID,
+  FIREBASE_APP_ID,
+} from "@env";
+
+// Get config from multiple sources with fallback priority
+const configValues = {
+  // First try EAS build env, then Constants extra, then local .env imports
+  apiKey:
+    process.env.FIREBASE_API_KEY ||
+    Constants.expoConfig?.extra?.firebaseApiKey ||
+    FIREBASE_API_KEY,
+  authDomain:
+    process.env.FIREBASE_AUTH_DOMAIN ||
+    Constants.expoConfig?.extra?.firebaseAuthDomain ||
+    FIREBASE_AUTH_DOMAIN,
+  projectId:
+    process.env.FIREBASE_PROJECT_ID ||
+    Constants.expoConfig?.extra?.firebaseProjectId ||
+    FIREBASE_PROJECT_ID,
+  storageBucket:
+    process.env.FIREBASE_STORAGE_BUCKET ||
+    Constants.expoConfig?.extra?.firebaseStorageBucket ||
+    FIREBASE_STORAGE_BUCKET,
+  messagingSenderId:
+    process.env.FIREBASE_MESSAGING_SENDER_ID ||
+    Constants.expoConfig?.extra?.firebaseMessagingSenderId ||
+    FIREBASE_MESSAGING_SENDER_ID,
+  appId:
+    process.env.FIREBASE_APP_ID ||
+    Constants.expoConfig?.extra?.firebaseAppId ||
+    FIREBASE_APP_ID,
+};
+
+// Validate required Firebase config
+const requiredConfigs = [
+  "apiKey",
+  "authDomain",
+  "projectId",
+  "storageBucket",
+  "messagingSenderId",
+  "appId",
+];
+
+const missingConfigs = requiredConfigs.filter((key) => {
+  const value = configValues[key];
+  return !value || value === "undefined";
+});
+
+if (missingConfigs.length > 0) {
+  console.error("Missing Firebase configuration for:", missingConfigs);
+  console.error("Config values:", configValues);
+  console.error("Available env vars:", {
+    //     "process.env keys": Object.keys(process.env).filter(
+    //   (k) => k.includes("FIREBASE")
+    // ),
+    "Constants extra keys": Object.keys(Constants.expoConfig?.extra || {}),
+    "Constants extra values": Constants.expoConfig?.extra || {},
+  });
+
+  // In development, provide helpful error message
+  if (__DEV__) {
+    //     throw new Error(
+    //   `Missing Firebase config: ${missingConfigs.join(
+    //     ", "
+    //   )}. Please check your EAS Secrets and local .env file (if applicable).`
+    // );
+    console.error("Development environment detected. Please check:");
+    console.error("1. .env file exists and contains all Firebase config");
+    console.error("2. babel.config.js includes react-native-dotenv plugin");
+    console.error("3. Environment variables are correctly named");
+
+    // Don't throw in dev, allow fallback to work
+    console.warn("Continuing with available configuration...");
+  } else {
+    // In production, log error but don't crash the app immediately
+    console.error(
+      "Firebase configuration is incomplete. Some features may not work."
+    );
+    // Only throw if absolutely critical configs are missing
+    if (!configValues.apiKey || !configValues.projectId) {
+      throw new Error(
+        "Critical Firebase configuration missing for production."
+      );
+    }
+  }
+}
+
+const firebaseConfig = configValues;
+// console.log("=== FIREBASE CONFIG DEBUG ===");
+// console.log("Final Firebase Config:", JSON.stringify(firebaseConfig, null, 2));
+// console.log("Config source analysis:");
+// console.log(
+//   "- process.env.FIREBASE_API_KEY:",
+//   process.env.FIREBASE_API_KEY ? "SET" : "NOT SET"
+// );
+// console.log(
+//   "- Constants.expoConfig?.extra?.firebaseApiKey:",
+//   Constants.expoConfig?.extra?.firebaseApiKey ? "SET" : "NOT SET"
+// );
+// console.log(
+//   "- FIREBASE_API_KEY from @env:",
+//   typeof FIREBASE_API_KEY !== "undefined" ? "SET" : "NOT SET"
+// );
+// console.log("==============================");
+
+let app, db, storage, auth;
+let firebaseInitialized = false;
+let initializationPromise = null;
+
+// Singleton pattern to ensure Firebase is only initialized once
+function getFirebaseApp() {
+  // Check if app already exists to prevent duplicate initialization
+  const existingApps = getApps();
+  if (existingApps.length > 0) {
+    console.log("🔄 Using existing Firebase app");
+    return existingApps[0];
+  }
+  console.log("🆕 Creating new Firebase app");
+  return initializeApp(firebaseConfig);
+}
+
+// Simplified and more reliable auth initialization for Firebase v11.8.1
+function initializeFirebaseAuth(app) {
+  try {
+    console.log("🔐 Initializing Firebase Auth...");
+
+    // Always initialize auth with AsyncStorage persistence for React Native
+    // This prevents the warning about missing AsyncStorage
+    try {
+      const authInstance = initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage),
+      });
+
+      console.log(
+        "✅ Firebase Auth initialized successfully with AsyncStorage persistence"
+      );
+      return authInstance;
+    } catch (initError) {
+      // If initializeAuth fails (e.g., already initialized), try getAuth
+      if (initError.code === "auth/already-initialized") {
+        console.log("✅ Using existing Firebase Auth instance");
+        const existingAuth = getAuth(app);
+        return existingAuth;
+      }
+      throw initError;
+    }
+  } catch (authError) {
+    console.error("❌ Firebase Auth initialization failed:", authError);
+
+    // Enhanced error handling for v11.8.1
+    if (
+      authError.message?.includes("Component auth has not been registered yet")
+    ) {
+      console.log(
+        "🔧 Auth component not registered, using fallback initialization..."
+      );
+
+      // Fallback: Try a simple getAuth without persistence for now
+      try {
+        const fallbackAuth = getAuth(app);
+        console.log("⚠️ Fallback auth initialized (without persistence)");
+        return fallbackAuth;
+      } catch (fallbackError) {
+        console.error(
+          "❌ Fallback auth initialization also failed:",
+          fallbackError
+        );
+        return null;
+      }
+    }
+
+    return null;
+  }
+}
+
+// Initialize Firebase with proper error handling and singleton pattern
+async function initializeFirebase() {
+  if (firebaseInitialized && app && auth) {
+    console.log(
+      "🔄 Firebase already initialized, returning existing instances"
+    );
+    return { app, db, storage, auth };
+  }
+
+  if (initializationPromise) {
+    console.log("⏳ Firebase initialization in progress, waiting...");
+    return initializationPromise;
+  }
+
+  initializationPromise = (async () => {
+    try {
+      console.log("🚀 Initializing Firebase v11.8.1...");
+
+      // Step 1: Initialize Firebase app
+      app = getFirebaseApp();
+      console.log("✅ Firebase app initialized");
+
+      // Step 2: Initialize Firestore
+      try {
+        db = getFirestore(app);
+        console.log("✅ Firebase firestore initialized");
+      } catch (firestoreError) {
+        console.error("❌ Firestore initialization failed:", firestoreError);
+        db = null;
+      }
+
+      // Step 3: Initialize Storage
+      try {
+        storage = getStorage(app);
+        console.log("✅ Firebase storage initialized");
+      } catch (storageError) {
+        console.error("❌ Storage initialization failed:", storageError);
+        storage = null;
+      }
+
+      // Step 4: Initialize Auth (most critical)
+      auth = initializeFirebaseAuth(app);
+
+      if (auth) {
+        // Verify auth is working by checking current user
+        try {
+          const currentUser = auth.currentUser;
+          console.log(
+            "✅ Auth verification successful, current user:",
+            currentUser ? "exists" : "none"
+          );
+        } catch (verifyError) {
+          console.warn("⚠️ Auth verification failed:", verifyError.message);
+        }
+      } else {
+        console.error("❌ Auth initialization returned null");
+      }
+
+      firebaseInitialized = true;
+      console.log("🎉 Firebase initialization completed successfully");
+
+      return { app, db, storage, auth };
+    } catch (error) {
+      console.error("❌ Critical Firebase initialization failed:", error);
+      console.error("Error details:", {
+        name: error.name,
+        message: error.message,
+        code: error.code || "N/A",
+      });
+
+      // Create fallback objects to prevent app crash
+      if (__DEV__) {
+        console.warn("🚨 Development mode: Creating fallback Firebase objects");
+      }
+
+      app = app || null;
+      storage = storage || null;
+      db = db || null;
+      auth = auth || null;
+
+      firebaseInitialized = false;
+      initializationPromise = null;
+
+      // Don't throw in production to keep app functional
+      if (!__DEV__) {
+        console.warn(
+          "Production mode: Continuing with limited Firebase functionality"
+        );
+      }
+
+      return { app, db, storage, auth };
+    }
+  })();
+
+  return initializationPromise;
+}
+
+// Initialize Firebase immediately
+const firebasePromise = initializeFirebase();
+
+// Ensure Firebase is initialized before exporting
+firebasePromise
+  .then(() => {
+    console.log("🔥 Firebase services ready for export");
+  })
+  .catch((error) => {
+    console.error("🚨 Firebase initialization promise failed:", error);
+  });
+
+// Safe getter functions with initialization checks
+export const getFirebaseAuth = async () => {
+  if (!auth) {
+    console.log("🔄 Auth not ready, waiting for Firebase initialization...");
+    const { auth: initializedAuth } = await firebasePromise;
+    return initializedAuth;
+  }
+  return auth;
+};
+
+export const getFirebaseDB = async () => {
+  if (!db) {
+    console.log("🔄 DB not ready, waiting for Firebase initialization...");
+    const { db: initializedDB } = await firebasePromise;
+    return initializedDB;
+  }
+  return db;
+};
+
+export const getFirebaseStorage = async () => {
+  if (!storage) {
+    console.log("🔄 Storage not ready, waiting for Firebase initialization...");
+    const { storage: initializedStorage } = await firebasePromise;
+    return initializedStorage;
+  }
+  return storage;
+};
+
+// Health check function
+export const checkFirebaseHealth = async () => {
+  try {
+    const {
+      app: healthApp,
+      auth: healthAuth,
+      db: healthDB,
+      storage: healthStorage,
+    } = await firebasePromise;
+
+    const health = {
+      app: !!healthApp,
+      auth: !!healthAuth,
+      db: !!healthDB,
+      storage: !!healthStorage,
+      initialized: firebaseInitialized,
+    };
+
+    // Only log if there are issues (not all services healthy)
+    const allHealthy =
+      health.app &&
+      health.auth &&
+      health.db &&
+      health.storage &&
+      health.initialized;
+    if (!allHealthy) {
+      console.log("🩺 Firebase Health Check:", health);
+    }
+
+    return health;
+  } catch (error) {
+    console.error("🚨 Firebase health check failed:", error);
+    return {
+      app: false,
+      auth: false,
+      db: false,
+      storage: false,
+      initialized: false,
+      error: error.message,
+    };
+  }
+};
+
+// Backward compatibility exports (these will wait for initialization)
+export { storage, db, auth };
+
+// Re-initialization function for development hot reloads
+export const reinitializeFirebase = async () => {
+  console.log("🔄 Re-initializing Firebase...");
+  firebaseInitialized = false;
+  initializationPromise = null;
+  app = null;
+  db = null;
+  storage = null;
+  auth = null;
+
+  return await initializeFirebase();
+};

@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "296739226456",
+    "project_id": "bbm-nativeapp",
+    "storage_bucket": "bbm-nativeapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:296739226456:android:31afc38c5316bf3b2bdb2d",
+        "android_client_info": {
+          "package_name": "com.noobdevtest.buildbharatmart.android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "296739226456-edg0lnle75qg2jl82ioimkh8spa7konh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.noobdevtest.buildbharatmart.android",
+            "certificate_hash": "4344a5695f396b6a348238f9d09d5afd2d3eed88"
+          }
+        },
+        {
+          "client_id": "296739226456-5dbe829o3cus909ncd6r47q7q74pacjb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAX_0pNiSaZXpKD6mrvpuq81JtjcJUMksI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "296739226456-5dbe829o3cus909ncd6r47q7q74pacjb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "296739226456-j6na378g1a8bf15m85bkv7ee9v0qh66u.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.noobdevtest.buildbharatmart.iOS"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

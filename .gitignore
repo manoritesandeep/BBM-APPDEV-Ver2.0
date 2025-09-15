@@ -1,0 +1,34 @@
+node_modules/
+.expo/
+dist/
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+.vscode
+package-lock.json
+*.env*
+
+# macOS
+.DS_Store
+
+# local env files
+.env*.local
+.env
+
+# Expo
+/android
+/ios
+
+# Exclude keystore file containing sensitive SHA1 and SHA256
+@noobdevtest__build-bharat-mart.jks
+
+# Firebase configuration files
+# google-services.json
+
+# iOS configuration files
+# GoogleService-Info.plist
