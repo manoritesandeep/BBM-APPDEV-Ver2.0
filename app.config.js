@@ -20,7 +20,16 @@ export default {
     orientation: "default", // Changed from "portrait" to allow auto-rotation
     icon: "./assets/icon.png", // changed from DarkBG_Logo.jpg to icon.png
     plugins: [
+      [
+        "expo-build-properties",
+        {
+          ios: {
+            useFrameworks: "dynamic",
+          },
+        },
+      ],
       ["expo-localization"],
+
       [
         "expo-image-picker",
         {
