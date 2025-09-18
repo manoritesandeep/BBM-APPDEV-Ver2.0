@@ -1,4 +1,6 @@
+import GetOTP from "./GetOTP";
+
 function PhoneAuth() {
-  return null;
+  return <GetOTP />;
 }
 export default PhoneAuth;
