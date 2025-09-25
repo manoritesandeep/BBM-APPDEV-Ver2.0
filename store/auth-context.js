@@ -44,13 +44,17 @@ function AuthContextProvider({ children }) {
   // Remove token, userId, and provider on logout
   async function logout() {
     try {
-      // Sign out from respective social provider
+      // Sign out from respective social provider or Firebase auth
       if (authProvider === "google") {
         await signOutFromGoogle();
       } else if (authProvider === "facebook") {
         await signOutFromFacebook();
       } else if (authProvider === "apple") {
         await signOutFromApple();
+      } else if (authProvider === "phone") {
+        // For phone auth, we need to sign out from Firebase
+        const auth = require("@react-native-firebase/auth").default;
+        await auth().signOut();
       }
 
       setAuthToken(null);

@@ -10,6 +10,7 @@ import {
 } from "react-native";
 
 import AuthContent from "../components/Auth/AuthContent";
+import PhoneAuth from "../components/Auth/providers/Phone/PhoneAuth";
 import { Colors } from "../constants/styles";
 import { AuthContext } from "../store/auth-context";
 import { UserContext } from "../store/user-context";
@@ -20,6 +21,7 @@ import { useToast } from "../components/UI/Toast";
 
 function UnifiedAuthScreen({ navigation }) {
   const [isLogin, setIsLogin] = useState(true);
+  const [showPhoneAuth, setShowPhoneAuth] = useState(false);
   const { handleEmailAuth, isAuthenticating } = useEmailAuth();
   const { ToastComponent } = useToast();
 
@@ -35,6 +37,20 @@ function UnifiedAuthScreen({ navigation }) {
     navigation.navigate("EmailPasswordReset");
   }
 
+  function handlePhoneAuth() {
+    setShowPhoneAuth(true);
+  }
+
+  function handlePhoneAuthSuccess(result) {
+    // Phone authentication was successful
+    // Navigation will be handled automatically by the auth context
+    setShowPhoneAuth(false);
+  }
+
+  function handleBackFromPhoneAuth() {
+    setShowPhoneAuth(false);
+  }
+
   if (isAuthenticating) {
     return (
       <LoadingOverlay
@@ -46,6 +62,23 @@ function UnifiedAuthScreen({ navigation }) {
         overlay={true}
         backgroundColor="rgba(255, 255, 255, 0.95)"
       />
+    );
+  }
+
+  // Show phone authentication screen
+  if (showPhoneAuth) {
+    return (
+      <SafeAreaWrapper
+        edges={["left", "right"]}
+        backgroundColor={Colors.primary100}
+      >
+        <ToastComponent />
+        <PhoneAuth
+          isSignUp={!isLogin}
+          onSuccess={handlePhoneAuthSuccess}
+          onBack={handleBackFromPhoneAuth}
+        />
+      </SafeAreaWrapper>
     );
   }
 
@@ -105,6 +138,7 @@ function UnifiedAuthScreen({ navigation }) {
                 onAuthenticate={authHandler}
                 onSwitchMode={switchAuthModeHandler}
                 onForgotPassword={handleForgotPassword}
+                onPhoneAuth={handlePhoneAuth}
               />
             </View>
           </View>

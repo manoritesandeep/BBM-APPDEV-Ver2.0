@@ -1,10 +1,12 @@
 // Enhanced Authentication Content - Unified Login/Signup Experience
 import { useState } from "react";
-import { Alert, StyleSheet, View, Text } from "react-native";
+import { Alert, StyleSheet, View, Text, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import FlatButton from "../UI/authUI/FlatButton";
 import AuthForm from "./AuthForm";
 import { Colors } from "../../constants/styles";
 import SocialLoginContainer from "./SocialLoginContainer";
+import { PhoneSignInButton } from "./providers/Phone/components";
 import { useToast } from "../UI/Toast";
 import { useI18n } from "../../store/i18n-context";
 
@@ -13,9 +15,11 @@ function AuthContent({
   onAuthenticate,
   onSwitchMode,
   onForgotPassword,
+  onPhoneAuth,
 }) {
   const { t } = useI18n();
   const { showToast } = useToast();
+  const [showEmailForm, setShowEmailForm] = useState(false);
   const [credentialsInvalid, setCredentialsInvalid] = useState({
     email: false,
     password: false,
@@ -56,27 +60,58 @@ function AuthContent({
 
   return (
     <View style={styles.authContent}>
-      {/* Email/Password Section */}
-      <View style={styles.emailSection}>
+      {/* Quick Access Section */}
+      <View style={styles.quickAccessSection}>
         <Text style={styles.sectionTitle}>
           {isLogin
-            ? t("auth.signInWithEmail")
-            : t("auth.createAccountWithEmail")}
+            ? "Sign in with Email or Phone Number"
+            : "Create Account with Email or Phone Number"}
         </Text>
-        <AuthForm
+
+        {/* Phone Authentication Button */}
+        <PhoneSignInButton
+          onPress={onPhoneAuth}
           isLogin={isLogin}
-          onSubmit={submitHandler}
-          credentialsInvalid={credentialsInvalid}
-          onForgotPassword={onForgotPassword}
+          style={styles.phoneButton}
         />
+
+        {/* Email/Password Toggle */}
+        <TouchableOpacity
+          style={styles.emailToggleButton}
+          onPress={() => setShowEmailForm(!showEmailForm)}
+        >
+          <Ionicons
+            name={showEmailForm ? "chevron-up" : "chevron-down"}
+            size={20}
+            color={Colors.accent600}
+            style={styles.toggleIcon}
+          />
+          <Text style={styles.emailToggleText}>
+            {showEmailForm ? "Hide Email Option" : "Use Email Instead"}
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Divider */}
-      <View style={styles.dividerContainer}>
-        <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>OR</Text>
-        <View style={styles.dividerLine} />
-      </View>
+      {/* Email/Password Section - Collapsible */}
+      {showEmailForm && (
+        <>
+          <View style={styles.emailSection}>
+            <AuthForm
+              isLogin={isLogin}
+              onSubmit={submitHandler}
+              credentialsInvalid={credentialsInvalid}
+              onForgotPassword={onForgotPassword}
+            />
+          </View>
+
+          {/* Divider */}
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+        </>
+      )}
 
       {/* Social Login Section */}
       <View style={styles.socialSection}>
@@ -111,6 +146,32 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 1, height: 1 },
     shadowOpacity: 0.35,
     shadowRadius: 4,
+  },
+  quickAccessSection: {
+    marginBottom: 12,
+  },
+  phoneButton: {
+    marginVertical: 8,
+  },
+  emailToggleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: Colors.primary300,
+    borderRadius: 8,
+    backgroundColor: Colors.primary50,
+  },
+  toggleIcon: {
+    marginRight: 8,
+  },
+  emailToggleText: {
+    fontSize: 14,
+    color: Colors.accent600,
+    fontWeight: "500",
   },
   emailSection: {
     marginBottom: 12,
