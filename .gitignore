@@ -27,8 +27,8 @@ package-lock.json
 # Exclude keystore file containing sensitive SHA1 and SHA256
 @noobdevtest__build-bharat-mart.jks
 
-# Firebase configuration files
-# google-services.json
+Firebase configuration files
+google-services.json
 
-# iOS configuration files
-# GoogleService-Info.plist
+iOS configuration files
+GoogleService-Info.plist
