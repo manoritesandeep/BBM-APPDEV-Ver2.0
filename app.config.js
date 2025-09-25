@@ -83,7 +83,8 @@ export default {
       usesAppleSignIn: true,
       supportsTablet: true,
       bundleIdentifier: "com.noobdevtest.buildbharatmart.iOS",
-      googleServicesFile: "./GoogleService-Info.plist",
+      googleServicesFile:
+        process.env.GOOGLE_SERVICES_INFOPLIST || "./GoogleService-Info.plist",
       // This indicates that your iOS app only uses standard/exempt encryption, as required.
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
@@ -119,7 +120,8 @@ export default {
       ],
       package: "com.noobdevtest.buildbharatmart.android",
       edgeToEdgeEnabled: true,
-      googleServicesFile: "./google-services.json",
+      googleServicesFile:
+        process.env.GOOGLE_SERVICES_JSON || "./google-services.json",
       config: {
         googleMaps: {
           apiKey: process.env.GOOGLE_MAPS_API_KEY,
