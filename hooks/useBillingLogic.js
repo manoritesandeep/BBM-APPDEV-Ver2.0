@@ -398,9 +398,11 @@ export function useBillingLogic() {
           orderId: PaymentService.generateOrderId(),
           userInfo: {
             name: orderData.guest
-              ? orderData.userEmail.split("@")[0]
-              : userCtx.user?.name || "Customer",
-            email: orderData.userEmail,
+              ? orderData.userEmail
+                ? orderData.userEmail.split("@")[0]
+                : "Guest"
+              : userCtx.user?.name || userCtx.user?.displayName || "Customer",
+            email: orderData.userEmail || "noemail@buildmart.com",
             contact: orderData.phone || "9999999999",
           },
         },
@@ -531,8 +533,12 @@ export function useBillingLogic() {
         Alert.alert("Error", "User ID missing. Please log in again.");
         return;
       }
-      if (!user.email) {
-        Alert.alert("Error", "User email missing. Please update your profile.");
+      // Check if user can place orders (phone users don't need email)
+      if (!PhoneUserEmailService.canPlaceOrders(user)) {
+        Alert.alert(
+          "Error",
+          "Please verify your email address or phone number to place orders."
+        );
         return;
       }
 
@@ -553,10 +559,10 @@ export function useBillingLogic() {
       try {
         const orderData = {
           userId: authCtx.userId,
-          userEmail: user.email,
+          userEmail: user.email || "", // Email is optional for phone users
           items: cartCtx.items,
           address: addressToUse,
-          phone: user.phone || "",
+          phone: user.phone || user.phoneNumber || "",
           total,
           subtotal,
           discount,
@@ -575,9 +581,9 @@ export function useBillingLogic() {
           amount: total,
           orderId: PaymentService.generateOrderId(),
           userInfo: {
-            name: user.name || "Customer",
-            email: user.email,
-            contact: user.phone || "9999999999",
+            name: user.name || user.displayName || "Customer",
+            email: user.email || "noemail@buildmart.com", // Fallback email for phone users
+            contact: user.phone || user.phoneNumber || "9999999999",
           },
         };
 
@@ -624,8 +630,12 @@ export function useBillingLogic() {
         Alert.alert("Error", "User ID missing. Please log in again.");
         return;
       }
-      if (!user.email) {
-        Alert.alert("Error", "User email missing. Please update your profile.");
+      // Check if user can place orders (phone users don't need email)
+      if (!PhoneUserEmailService.canPlaceOrders(user)) {
+        Alert.alert(
+          "Error",
+          "Please verify your email address or phone number to place orders."
+        );
         return;
       }
 
@@ -646,11 +656,11 @@ export function useBillingLogic() {
       try {
         const orderData = {
           userId: authCtx.userId,
-          userEmail: user.email,
+          userEmail: user.email || "", // Email is optional for phone users
           userName: user.name || user.displayName || null, // Add user's name from profile
           items: cartCtx.items,
           address: addressToUse,
-          phone: user.phone || "",
+          phone: user.phone || user.phoneNumber || "",
           total,
           subtotal,
           discount,
