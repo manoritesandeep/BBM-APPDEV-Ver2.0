@@ -124,11 +124,23 @@ export function usePhoneAuth() {
         userData = userDoc.data();
         console.log("👤 Existing user logged in");
 
-        // Update last login timestamp
-        await updateDoc(userDocRef, {
+        // Update last login timestamp and ensure phone number is current
+        const updateData = {
           lastLoginAt: new Date().toISOString(),
           phoneNumber: phoneNumber, // Ensure phone number is up to date
-        });
+          phoneVerified: true, // Always true for phone auth users
+        };
+
+        // If user doesn't have authProvider set or it's different, update it
+        if (!userData.authProvider || userData.authProvider !== "phone") {
+          updateData.authProvider = "phone";
+        }
+
+        await updateDoc(userDocRef, updateData);
+
+        // Update userData to reflect the changes
+        userData = { ...userData, ...updateData };
+        console.log("✅ User profile synced with phone number:", phoneNumber);
       } else {
         // New user - registration (Firebase Phone Auth creates user automatically)
         console.log("👤 Creating new user account");
@@ -138,18 +150,21 @@ export function usePhoneAuth() {
           userId: userId,
           phoneNumber: phoneNumber,
           displayName: additionalData.name || `User ${phoneNumber.slice(-4)}`,
-          email: additionalData.email || "",
+          email: additionalData.email || "", // Empty by default for phone sign-ups
           address: additionalData.address || "",
           profilePhotoUrl: "",
           authProvider: "phone",
           phoneVerified: true,
-          emailVerified: false,
+          emailVerified: false, // Will be false until email is added and verified
+          emailOptional: true, // Flag indicating email is optional for this user
+          canAddEmail: true, // Flag indicating user can add email address
           createdAt: new Date().toISOString(),
           lastLoginAt: new Date().toISOString(),
           preferences: {
             notifications: true,
             language: "en",
             theme: "light",
+            communicationChannel: "phone", // Preferred communication channel
           },
           // Generate unique user ID for internal use
           internalUserId: generateUniqueId(),

@@ -17,6 +17,7 @@ import {
   PAYMENT_STATUS,
 } from "../util/paymentService";
 import { EmailService, EmailTemplates } from "../components/Email";
+import PhoneUserEmailService from "../components/Auth/providers/Phone/services/PhoneUserEmailService";
 
 export function useBillingLogic() {
   const navigation = useNavigation();
@@ -103,15 +104,23 @@ export function useBillingLogic() {
   const showOrderSuccessAlert = (
     orderNumber,
     isGuest = false,
-    emailSent = false
+    communicationResult = null
   ) => {
-    const emailMessage = emailSent
-      ? "\n\nA confirmation email has been sent with order details."
-      : "";
+    let confirmationMessage = "";
+
+    if (communicationResult?.success) {
+      if (communicationResult.method === "email") {
+        confirmationMessage =
+          "\n\nA confirmation email has been sent with order details.";
+      } else if (communicationResult.method === "whatsapp") {
+        confirmationMessage =
+          "\n\nYou'll receive order updates via WhatsApp on your registered number.";
+      }
+    }
 
     const message = isGuest
-      ? `Your order #${orderNumber} has been placed.${emailMessage}\n\nPlease save your order number for tracking.`
-      : `Your order #${orderNumber} has been placed.${emailMessage}\n\nWould you like to track your order?`;
+      ? `Your order #${orderNumber} has been placed.${confirmationMessage}\n\nPlease save your order number for tracking.`
+      : `Your order #${orderNumber} has been placed.${confirmationMessage}\n\nWould you like to track your order?`;
 
     const buttons = isGuest
       ? [
@@ -139,27 +148,48 @@ export function useBillingLogic() {
     Alert.alert("Order Placed Successfully! 🎉", message, buttons);
   };
 
-  // Send order confirmation email
+  // Send order confirmation email (with smart phone user handling)
   const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
     try {
-      // Determine recipient email
+      // Determine recipient email and communication preferences
       let customerEmail = null;
       let customerName = null;
+      let communicationPrefs = null;
 
       if (authCtx.isAuthenticated) {
         // For authenticated users, get from auth context and user context
         customerEmail = userCtx.user?.email || authCtx.userEmail;
         customerName =
           userCtx.user?.name || authCtx.userName || "Valued Customer";
+
+        // Get communication preferences for phone users
+        if (userCtx.user) {
+          communicationPrefs =
+            PhoneUserEmailService.getCommunicationPreferences(userCtx.user);
+        }
       } else if (orderData.guest && guestData.email) {
         // For guest users, get from guest data
         customerEmail = guestData.email;
         customerName = guestData.name || "Guest Customer";
       }
 
+      // If no email but user has phone (phone auth user), that's okay
       if (!customerEmail) {
-        console.warn("⚠️ No customer email found for order confirmation");
-        return { success: false, error: "No customer email" };
+        if (communicationPrefs?.canReceiveWhatsApp) {
+          console.log(
+            "📱 Phone user without email - will use WhatsApp for order confirmation"
+          );
+          return {
+            success: true,
+            method: "whatsapp",
+            message: "Order confirmation via WhatsApp",
+          };
+        } else {
+          console.warn(
+            "⚠️ No customer email or phone found for order confirmation"
+          );
+          return { success: false, error: "No customer email or phone" };
+        }
       }
 
       // Format order items for email
@@ -330,11 +360,7 @@ export function useBillingLogic() {
       });
 
       setTimeout(() => {
-        showOrderSuccessAlert(
-          orderNumber,
-          orderData.guest,
-          emailResult.success
-        );
+        showOrderSuccessAlert(orderNumber, orderData.guest, emailResult);
       }, 1000);
     } catch (error) {
       console.error("Order creation after payment error:", error);
@@ -714,7 +740,7 @@ export function useBillingLogic() {
             showOrderSuccessAlert(
               paymentResult.orderNumber,
               false,
-              emailResult.success
+              emailResult
             );
           }, 1000);
         }
@@ -807,11 +833,7 @@ export function useBillingLogic() {
         });
 
         setTimeout(() => {
-          showOrderSuccessAlert(
-            paymentResult.orderNumber,
-            true,
-            emailResult.success
-          );
+          showOrderSuccessAlert(paymentResult.orderNumber, true, emailResult);
         }, 1000);
       }
     } catch (e) {

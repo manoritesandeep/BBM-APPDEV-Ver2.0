@@ -24,8 +24,16 @@ const EmailVerificationBanner = ({ navigation, onDismiss }) => {
   const [canResend, setCanResend] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
 
-  // Don't render banner if user is already verified
+  // Don't render banner if user is already verified or is a phone auth user without email
   if (userCtx.user?.emailVerified) {
+    return null;
+  }
+
+  // Don't show email verification banner for phone auth users who haven't added an email
+  if (
+    userCtx.user?.authProvider === "phone" &&
+    (!userCtx.user?.email || userCtx.user?.email.trim() === "")
+  ) {
     return null;
   }
 

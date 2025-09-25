@@ -23,8 +23,9 @@ function UserProfileForm({ onClose }) {
   const userCtx = useContext(UserContext);
   const user = userCtx.user || {};
 
-  const [name, setName] = useState(user.name || "");
-  const [phone, setPhone] = useState(user.phone || "");
+  const [name, setName] = useState(user.name || user.displayName || "");
+  const [phone, setPhone] = useState(user.phone || user.phoneNumber || "");
+  const [email, setEmail] = useState(user.email || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -39,14 +40,52 @@ function UserProfileForm({ onClose }) {
     };
   }
 
+  // Validate email format
+  function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  // Check if user can update email (phone auth users can add email if empty)
+  function canUpdateEmail() {
+    const isPhoneUser = user.authProvider === "phone";
+    const hasNoEmail = !user.email || user.email.trim() === "";
+    return isPhoneUser && hasNoEmail;
+  }
+
   async function handleSave() {
     setLoading(true);
     setError("");
     setSuccess(false);
+
     try {
+      // Validate email if it's being added
+      if (email && email.trim() !== "" && !validateEmail(email)) {
+        setError("Please enter a valid email address");
+        setLoading(false);
+        return;
+      }
+
       const db = await getFirebaseDB();
       const userRef = doc(db, "users", userId);
-      await updateDoc(userRef, { name, phone });
+
+      // Prepare update data
+      const updateData = {
+        name: name || user.displayName,
+        phone,
+        // For phone auth users, also update phoneNumber field for consistency
+        ...(user.authProvider === "phone" && { phoneNumber: phone }),
+      };
+
+      // Add email handling for phone auth users
+      if (canUpdateEmail() && email && email.trim() !== "") {
+        updateData.email = email.trim();
+        updateData.canAddEmail = false; // Lock email after first addition
+        updateData.emailVerified = false; // Email needs verification
+        console.log("📧 Adding email to phone auth user:", email);
+      }
+
+      await updateDoc(userRef, updateData);
       const updatedDoc = await getDoc(userRef);
       if (updatedDoc.exists()) {
         userCtx.setUser(updatedDoc.data());
@@ -116,16 +155,31 @@ function UserProfileForm({ onClose }) {
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Email Address</Text>
         <TextInput
-          style={[styles.input, styles.disabledInput]}
-          placeholder="Email"
-          value={user.email}
-          editable={false}
+          style={[styles.input, !canUpdateEmail() && styles.disabledInput]}
+          placeholder={
+            canUpdateEmail()
+              ? "Add email for order notifications (optional)"
+              : "Email"
+          }
+          value={email}
+          onChangeText={canUpdateEmail() ? handleChange(setEmail) : undefined}
+          editable={canUpdateEmail()}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
         />
         <Text style={styles.helperText}>
-          Email cannot be changed{" "}
-          {user.provider === "google" && "(Google account)"}
-          {user.provider === "facebook" && "(Facebook account)"}
-          {user.provider === "apple" && "(Apple account)"}
+          {canUpdateEmail()
+            ? "📧 Add email to receive order confirmations via email (optional)"
+            : user.authProvider === "phone" && user.email
+            ? "📧 Email added and locked for security"
+            : user.authProvider === "google"
+            ? "Email cannot be changed (Google account)"
+            : user.authProvider === "facebook"
+            ? "Email cannot be changed (Facebook account)"
+            : user.authProvider === "apple"
+            ? "Email cannot be changed (Apple account)"
+            : "Email cannot be changed"}
         </Text>
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}

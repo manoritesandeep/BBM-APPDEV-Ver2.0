@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { Alert } from "react-native";
 import { UserContext } from "../store/user-context";
+import PhoneUserEmailService from "../components/Auth/providers/Phone/services/PhoneUserEmailService";
 
 /**
  * Higher-order component that protects features requiring email verification
@@ -15,8 +16,8 @@ export const withEmailVerification = (
     const { navigation } = props;
 
     const checkVerificationAndProceed = (callback) => {
-      // If user is verified, proceed normally
-      if (userCtx.user?.emailVerified) {
+      // Check if user can use features (includes phone auth users)
+      if (userCtx.user && PhoneUserEmailService.canPlaceOrders(userCtx.user)) {
         if (callback) callback();
         return true;
       }
@@ -55,7 +56,7 @@ export const withEmailVerification = (
         return false;
       }
 
-      // For new users who haven't seen verification screen yet
+      // For new users who haven't seen verification screen yet (but only if they truly need verification)
       Alert.alert(
         "Email Verification Required",
         `Please verify your email to use ${featureName}.`,
@@ -93,6 +94,11 @@ export const withEmailVerification = (
         {...props}
         checkVerificationAndProceed={checkVerificationAndProceed}
         isEmailVerified={userCtx.user?.emailVerified || false}
+        canPlaceOrders={
+          userCtx.user
+            ? PhoneUserEmailService.canPlaceOrders(userCtx.user)
+            : false
+        }
       />
     );
   };
@@ -105,13 +111,13 @@ export const useEmailVerificationGuard = (navigation) => {
   const userCtx = useContext(UserContext);
 
   const requireVerification = (featureName = "this feature", callback) => {
-    // If user is verified, proceed
-    if (userCtx.user?.emailVerified) {
+    // Check if user can place orders (includes phone auth users)
+    if (userCtx.user && PhoneUserEmailService.canPlaceOrders(userCtx.user)) {
       if (callback) callback();
       return true;
     }
 
-    // Show verification required alert
+    // Show verification required alert (only for users who truly need verification)
     Alert.alert(
       "Email Verification Required",
       `To use ${featureName}, please verify your email address. This helps us prevent fraud and protect all users.`,
@@ -146,6 +152,9 @@ export const useEmailVerificationGuard = (navigation) => {
 
   return {
     isEmailVerified: userCtx.user?.emailVerified || false,
+    canPlaceOrders: userCtx.user
+      ? PhoneUserEmailService.canPlaceOrders(userCtx.user)
+      : false,
     hasLimitedAccess:
       userCtx.user?.limitedAccess || userCtx.user?.skippedVerification || false,
     requireVerification,

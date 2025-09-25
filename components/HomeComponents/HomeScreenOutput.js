@@ -200,10 +200,12 @@ function HomeScreenOutput({ navigation }) {
       >
         <DeliveryAddressSection />
 
-        {/* Email Verification Banner */}
+        {/* Email Verification Banner - Only for users who have email but haven't verified */}
         {showVerificationBanner &&
           userCtx.user &&
-          !userCtx.user.emailVerified && (
+          !userCtx.user.emailVerified &&
+          userCtx.user.email &&
+          userCtx.user.email.trim() !== "" && (
             <EmailVerificationBanner
               navigation={navigation}
               onDismiss={() => setShowVerificationBanner(false)}
