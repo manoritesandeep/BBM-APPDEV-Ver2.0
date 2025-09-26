@@ -150,31 +150,63 @@ async function initializeFirebase() {
       console.log("✅ Firestore instance:", !!dbInstance);
       console.log("✅ Storage instance:", !!storageInstance);
 
-      // Initialize App Check
+      // Initialize App Check - Enhanced error handling
       try {
         if (__DEV__) {
           // Use debug provider in development
           console.log(
-            "🔧 Configuring App Check for development (debug provider)"
+            "🔧 App Check: Initializing debug provider for development"
           );
           await appCheck().initializeAppCheck({
             provider: "debug",
             isTokenAutoRefreshEnabled: true,
           });
+          console.log("✅ App Check: Debug provider initialized successfully");
         } else {
           // Use Play Integrity in production
           console.log(
-            "🔒 Configuring App Check for production (Play Integrity)"
+            "🔒 App Check: Initializing Play Integrity for production"
           );
           await appCheck().initializeAppCheck({
             provider: "playIntegrity",
             isTokenAutoRefreshEnabled: true,
           });
+          console.log("✅ App Check: Play Integrity initialized successfully");
         }
-        console.log("✅ App Check initialized successfully");
       } catch (appCheckError) {
-        console.warn("⚠️ App Check initialization failed:", appCheckError);
-        // Continue without App Check for now
+        // Enhanced error handling with specific error messages
+        const errorMessage =
+          appCheckError?.message ||
+          appCheckError?.toString() ||
+          "Unknown error";
+
+        if (errorMessage.includes("not installed natively")) {
+          console.log(
+            "ℹ️ App Check: Native module not available on this platform"
+          );
+          console.log(
+            "ℹ️ App Check: Continuing without App Check (authentication will still work)"
+          );
+        } else if (errorMessage.includes("Invalid configuration")) {
+          console.log(
+            "ℹ️ App Check: Configuration needs adjustment for this build type"
+          );
+          console.log(
+            "ℹ️ App Check: Phone authentication will work without App Check"
+          );
+        } else if (errorMessage.includes("app-not-authorized")) {
+          console.log("ℹ️ App Check: Debug token required for development");
+          console.log(
+            "ℹ️ App Check: Please register debug token in Firebase Console"
+          );
+        } else {
+          console.log("ℹ️ App Check: Initialization skipped -", errorMessage);
+        }
+
+        console.log(
+          "✅ App Check: Continuing with Firebase Authentication (App Check optional)"
+        );
+        // Continue without App Check - authentication will still work
       }
 
       firebaseInitialized = true;
