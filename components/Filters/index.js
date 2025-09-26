@@ -9,7 +9,6 @@ export {
 // Main Components
 export { default as FilterPanel } from "./FilterPanel";
 export { default as CompactFilterBar } from "./CompactFilterBar";
-export { default as FilterDemo } from "./FilterDemo";
 
 // Specialized Components
 export { default as FilterSection } from "./FilterSection";
@@ -79,13 +78,5 @@ function CustomFilters() {
     </View>
   );
 }
-```
-
-3. Demo Component:
-```jsx
-import { FilterDemo } from './components/Filters';
-
-// Use FilterDemo to see the system in action
-<FilterDemo />
 ```
 */
