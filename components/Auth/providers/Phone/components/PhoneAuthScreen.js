@@ -15,6 +15,12 @@ import { Colors } from "../../../../../constants/styles";
 import { usePhoneAuth } from "../hooks/usePhoneAuth";
 import { useToast } from "../../../../UI/Toast";
 import LoadingOverlay from "../../../../UI/authUI/LoadingOverlay";
+import EnhancedAlert from "../../../../UI/EnhancedAlert";
+import {
+  getErrorAlertButtons,
+  formatErrorMessage,
+  getRetryDelay,
+} from "../../../../../util/phoneAuthErrorHandler";
 
 const PhoneAuthScreen = ({
   isSignUp = false,
@@ -26,6 +32,9 @@ const PhoneAuthScreen = ({
   const [verificationCode, setVerificationCode] = useState("");
   const [step, setStep] = useState("phone"); // 'phone' or 'verification'
   const [countdown, setCountdown] = useState(0);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState(null);
+  const [retryDelayActive, setRetryDelayActive] = useState(false);
   const phoneInputRef = useRef(null);
   const codeInputRef = useRef(null);
 
@@ -38,6 +47,9 @@ const PhoneAuthScreen = ({
     resetPhoneAuth,
     validatePhoneNumber,
     formatPhoneNumber,
+    getCurrentError,
+    clearError,
+    retryCount,
   } = usePhoneAuth();
 
   const { showToast } = useToast();
@@ -64,9 +76,81 @@ const PhoneAuthScreen = ({
     setPhoneNumber(cleaned);
   };
 
-  // Send OTP with better UX messaging
+  // Show enhanced error alert
+  const showEnhancedError = (error, context = {}) => {
+    if (!error.isUserFriendly) {
+      // Fallback to toast for non-enhanced errors
+      showToast(error.message || "An error occurred", "error", 4000);
+      return;
+    }
+
+    const formattedMessage = formatErrorMessage(error, context.phoneNumber);
+
+    const buttons = getErrorAlertButtons(
+      error,
+      () => handleRetryAction(error, context), // onRetry
+      () => setAlertVisible(false), // onCancel
+      () => handleAlternativeAction(error) // onAlternative
+    );
+
+    setAlertConfig({
+      title: error.title,
+      message: formattedMessage,
+      type: error.type === "RECAPTCHA_ERROR" ? "info" : "error",
+      buttons,
+      customIcon: error.icon,
+    });
+
+    setAlertVisible(true);
+  };
+
+  // Handle retry action based on error type
+  const handleRetryAction = async (error, context) => {
+    setAlertVisible(false);
+
+    const delay = getRetryDelay(error);
+    if (delay > 0) {
+      setRetryDelayActive(true);
+      showToast(
+        `Please wait ${Math.ceil(delay / 1000)} seconds before retrying...`,
+        "info",
+        3000
+      );
+
+      setTimeout(() => {
+        setRetryDelayActive(false);
+      }, delay);
+      return;
+    }
+
+    if (error.forceResend || context.action === "resend") {
+      await handleResendOTP();
+    } else if (context.action === "verify") {
+      await handleVerifyOTP();
+    } else {
+      await handleSendOTP();
+    }
+  };
+
+  // Handle alternative authentication method
+  const handleAlternativeAction = (error) => {
+    setAlertVisible(false);
+    // Could navigate to email auth or other methods
+    showToast("You can try signing in with email instead", "info", 4000);
+    onBack(); // Go back to choose different auth method
+  };
+
+  // Send OTP with enhanced error handling
   const handleSendOTP = async () => {
+    if (retryDelayActive) {
+      showToast("Please wait before trying again", "warning", 2000);
+      return;
+    }
+
     try {
+      // Clear any previous errors
+      clearError();
+
       // Show initial loading message
       showToast("Sending verification code...", "info", 2000);
 
@@ -77,29 +161,50 @@ const PhoneAuthScreen = ({
       // Focus on verification code input
       setTimeout(() => codeInputRef.current?.focus(), 500);
     } catch (error) {
-      showToast(error.message, "error", 4000);
+      console.log("📱 Send OTP Error:", error);
+      showEnhancedError(error, { phoneNumber, action: "send" });
     }
   };
 
-  // Verify OTP
+  // Verify OTP with enhanced error handling
   const handleVerifyOTP = async () => {
     try {
+      // Clear any previous errors
+      clearError();
+
       const result = await verifyCode(verificationCode, isSignUp, initialData);
       showToast(result.message, "success", 3000);
       onSuccess(result);
     } catch (error) {
-      showToast(error.message, "error", 4000);
+      console.log("🔐 Verify OTP Error:", error);
+      showEnhancedError(error, {
+        phoneNumber,
+        verificationCode,
+        action: "verify",
+      });
     }
   };
 
-  // Resend OTP
+  // Resend OTP with enhanced error handling
   const handleResendOTP = async () => {
+    if (retryDelayActive) {
+      showToast("Please wait before requesting another code", "warning", 2000);
+      return;
+    }
+
     try {
+      // Clear any previous errors
+      clearError();
+
       const result = await resendVerificationCode(phoneNumber);
       showToast(result.message, "success", 3000);
       setCountdown(60);
     } catch (error) {
-      showToast(error.message, "error", 4000);
+      console.log("🔄 Resend OTP Error:", error);
+      showEnhancedError(error, {
+        phoneNumber,
+        action: "resend",
+      });
     }
   };
 
@@ -229,6 +334,20 @@ const PhoneAuthScreen = ({
                 🔒 A security verification may appear briefly to prevent
                 automated abuse
               </Text>
+
+              {retryCount > 0 && (
+                <View style={styles.retryInfo}>
+                  <Ionicons
+                    name="information-circle"
+                    size={16}
+                    color={Colors.accent500}
+                  />
+                  <Text style={styles.retryText}>
+                    Attempt {retryCount + 1} - If issues persist, try a
+                    different number
+                  </Text>
+                </View>
+              )}
             </>
           ) : (
             <>
@@ -315,6 +434,17 @@ const PhoneAuthScreen = ({
           )}
         </View>
       </ScrollView>
+
+      {/* Enhanced Error Alert */}
+      <EnhancedAlert
+        visible={alertVisible}
+        title={alertConfig?.title}
+        message={alertConfig?.message}
+        type={alertConfig?.type}
+        buttons={alertConfig?.buttons}
+        customIcon={alertConfig?.customIcon}
+        onDismiss={() => setAlertVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -477,6 +607,19 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontStyle: "italic",
     paddingHorizontal: 20,
+  },
+  retryInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+    paddingHorizontal: 20,
+  },
+  retryText: {
+    fontSize: 12,
+    color: Colors.accent500,
+    marginLeft: 6,
+    textAlign: "center",
   },
 });
 

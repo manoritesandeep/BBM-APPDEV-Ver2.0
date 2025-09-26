@@ -8,6 +8,7 @@ import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import storage from "@react-native-firebase/storage";
 import appCheck from "@react-native-firebase/app-check";
+import phoneAuthOptimizer from "./firebasePhoneAuthOptimizer";
 
 import Constants from "expo-constants";
 
@@ -215,6 +216,14 @@ async function initializeFirebase() {
           "✅ App Check: Continuing with Firebase Authentication (App Check optional)"
         );
         // Continue without App Check - authentication will still work
+      }
+
+      // Initialize phone auth optimization
+      try {
+        await phoneAuthOptimizer.configure();
+        console.log("✅ Phone Auth optimization configured");
+      } catch (error) {
+        console.warn("⚠️ Phone Auth optimization failed:", error.message);
       }
 
       firebaseInitialized = true;

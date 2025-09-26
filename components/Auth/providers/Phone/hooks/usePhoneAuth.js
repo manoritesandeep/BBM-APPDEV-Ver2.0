@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { Alert } from "react-native";
 import auth from "@react-native-firebase/auth";
 import {
@@ -15,6 +15,12 @@ import {
   validatePhoneNumber as validatePhone,
   formatPhoneNumber as formatPhone,
 } from "../utils/phoneUtils";
+import phoneAuthOptimizer from "../../../../../util/firebasePhoneAuthOptimizer";
+import {
+  getPhoneAuthErrorDetails,
+  getErrorAlertButtons,
+  formatErrorMessage,
+} from "../../../../../util/phoneAuthErrorHandler";
 
 /**
  * Phone Authentication Hook
@@ -25,6 +31,8 @@ export function usePhoneAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState(null);
   const [verificationInProgress, setVerificationInProgress] = useState(false);
+  const [currentError, setCurrentError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
   const authCtx = useContext(AuthContext);
   const userCtx = useContext(UserContext);
 
@@ -32,49 +40,64 @@ export function usePhoneAuth() {
   const validatePhoneNumber = validatePhone;
   const formatPhoneNumber = formatPhone;
 
-  // Send OTP to phone number
+  // Initialize Firebase optimization on hook creation
+  useEffect(() => {
+    const initializeOptimization = async () => {
+      try {
+        await phoneAuthOptimizer.configure();
+        console.log("✅ Phone auth optimization initialized");
+      } catch (error) {
+        console.warn("⚠️ Phone auth optimization failed:", error.message);
+      }
+    };
+
+    initializeOptimization();
+  }, []);
+
+  // Send OTP to phone number with enhanced error handling
   const sendVerificationCode = async (phoneNumber) => {
     const formattedPhone = formatPhoneNumber(phoneNumber);
 
     if (!validatePhoneNumber(formattedPhone)) {
-      throw new Error(
-        "Please enter a valid phone number with country code (e.g., +1234567890)"
+      const errorDetails = getPhoneAuthErrorDetails(
+        { code: "auth/invalid-phone-number" },
+        "phone_input"
       );
+      throw { ...errorDetails, isUserFriendly: true };
     }
 
     setIsLoading(true);
     setVerificationInProgress(true);
+    setCurrentError(null);
 
     try {
       console.log("📱 Sending verification code to:", formattedPhone);
+      console.log("🔧 Retry attempt:", retryCount + 1);
+
       const confirmation = await auth().signInWithPhoneNumber(formattedPhone);
       setConfirmationResult(confirmation);
+      setRetryCount(0); // Reset retry count on success
+
       console.log("✅ Verification code sent successfully");
       return { success: true, message: "Verification code sent to your phone" };
     } catch (error) {
       console.error("❌ Error sending verification code:", error);
       setVerificationInProgress(false);
+      setRetryCount((prev) => prev + 1);
 
-      let errorMessage = "Failed to send verification code";
+      // Get enhanced error details
+      const errorDetails = getPhoneAuthErrorDetails(error, "send_code");
+      setCurrentError(errorDetails);
 
-      switch (error.code) {
-        case "auth/invalid-phone-number":
-          errorMessage = "Invalid phone number format";
-          break;
-        case "auth/too-many-requests":
-          errorMessage = "Too many requests. Please try again later";
-          break;
-        case "auth/quota-exceeded":
-          errorMessage = "SMS quota exceeded. Please try again tomorrow";
-          break;
-        case "auth/network-request-failed":
-          errorMessage = "Network error. Please check your connection";
-          break;
-        default:
-          errorMessage = error.message || errorMessage;
-      }
+      // Create user-friendly error with enhanced details
+      const enhancedError = {
+        ...errorDetails,
+        isUserFriendly: true,
+        phoneNumber: formattedPhone,
+        retryAttempt: retryCount + 1,
+      };
 
-      throw new Error(errorMessage);
+      throw enhancedError;
     } finally {
       setIsLoading(false);
     }
@@ -198,29 +221,19 @@ export function usePhoneAuth() {
 
       let errorMessage = "Invalid verification code";
 
-      switch (error.code) {
-        case "auth/invalid-verification-code":
-          errorMessage = "Invalid verification code. Please try again";
-          break;
-        case "auth/code-expired":
-          errorMessage =
-            "Verification code has expired. Please request a new one";
-          break;
-        case "auth/too-many-requests":
-          errorMessage = "Too many failed attempts. Please try again later";
-          break;
-        case "auth/network-request-failed":
-          errorMessage = "Network error. Please check your connection";
-          break;
-        default:
-          if (error.message.includes("No account found")) {
-            errorMessage = error.message;
-          } else {
-            errorMessage = error.message || errorMessage;
-          }
-      }
+      // Get enhanced error details
+      const errorDetails = getPhoneAuthErrorDetails(error, "verify_code");
+      setCurrentError(errorDetails);
 
-      throw new Error(errorMessage);
+      // Create user-friendly error with enhanced details
+      const enhancedError = {
+        ...errorDetails,
+        isUserFriendly: true,
+        verificationCode,
+        retryAttempt: retryCount + 1,
+      };
+
+      throw enhancedError;
     } finally {
       setIsLoading(false);
     }
@@ -247,6 +260,12 @@ export function usePhoneAuth() {
     setIsLoading(false);
   };
 
+  // Get current error state for UI display
+  const getCurrentError = () => currentError;
+
+  // Clear current error
+  const clearError = () => setCurrentError(null);
+
   return {
     isLoading,
     verificationInProgress,
@@ -256,5 +275,8 @@ export function usePhoneAuth() {
     resetPhoneAuth,
     validatePhoneNumber,
     formatPhoneNumber,
+    getCurrentError,
+    clearError,
+    retryCount,
   };
 }

@@ -44,6 +44,9 @@ import { Colors } from "./constants/styles";
 // Initialize responsive system
 import "./constants/responsive";
 
+// Initialize phone auth optimization for better UX
+import phoneAuthOptimizer from "./util/firebasePhoneAuthOptimizer";
+
 const Stack = createNativeStackNavigator();
 
 /**
@@ -85,6 +88,14 @@ function Root() {
     async function fetchToken() {
       try {
         console.log("🔄 Checking for stored authentication...");
+
+        // Initialize phone auth optimization early
+        try {
+          await phoneAuthOptimizer.configure();
+          console.log("✅ Phone auth optimization initialized");
+        } catch (error) {
+          console.warn("⚠️ Phone auth optimization failed:", error.message);
+        }
 
         const storedToken = await AsyncStorage.getItem("token");
         const storedUserId = await AsyncStorage.getItem("userId");
