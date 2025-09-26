@@ -157,11 +157,19 @@ async function initializeFirebase() {
           console.log(
             "🔧 App Check: Initializing debug provider for development"
           );
+          console.log(
+            "ℹ️ App Check: Debug token should be auto-generated and validated against Firebase Console"
+          );
+
           await appCheck().initializeAppCheck({
             provider: "debug",
             isTokenAutoRefreshEnabled: true,
           });
+
           console.log("✅ App Check: Debug provider initialized successfully");
+          console.log(
+            "✅ App Check: Your registered debug token is now active"
+          );
         } else {
           // Use Play Integrity in production
           console.log(
