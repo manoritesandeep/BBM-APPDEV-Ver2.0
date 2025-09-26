@@ -3,10 +3,11 @@
 import "react-native-get-random-values";
 
 // React Native Firebase v22 imports - Native implementation
-import { firebase } from '@react-native-firebase/app';
-import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
-import storage from '@react-native-firebase/storage';
+import { firebase } from "@react-native-firebase/app";
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+import storage from "@react-native-firebase/storage";
+import appCheck from "@react-native-firebase/app-check";
 
 import Constants from "expo-constants";
 
@@ -21,7 +22,7 @@ import {
 } from "@env";
 
 // Global flags to silence deprecation warnings for React Native Firebase v22
-if (typeof globalThis !== 'undefined') {
+if (typeof globalThis !== "undefined") {
   globalThis.RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
   // globalThis.RNFB_MODULAR_DEPRECATION_STRICT_MODE = true; // Enable for debugging
 }
@@ -58,7 +59,7 @@ const configValues = {
 // Validate required Firebase config
 const requiredConfigs = [
   "apiKey",
-  "authDomain", 
+  "authDomain",
   "projectId",
   "storageBucket",
   "messagingSenderId",
@@ -129,7 +130,7 @@ async function initializeFirebase() {
 
       // React Native Firebase is automatically initialized from google-services files
       // We just need to get the instances
-      
+
       // Check if default app exists
       let app;
       try {
@@ -149,8 +150,37 @@ async function initializeFirebase() {
       console.log("✅ Firestore instance:", !!dbInstance);
       console.log("✅ Storage instance:", !!storageInstance);
 
+      // Initialize App Check
+      try {
+        if (__DEV__) {
+          // Use debug provider in development
+          console.log(
+            "🔧 Configuring App Check for development (debug provider)"
+          );
+          await appCheck().initializeAppCheck({
+            provider: "debug",
+            isTokenAutoRefreshEnabled: true,
+          });
+        } else {
+          // Use Play Integrity in production
+          console.log(
+            "🔒 Configuring App Check for production (Play Integrity)"
+          );
+          await appCheck().initializeAppCheck({
+            provider: "playIntegrity",
+            isTokenAutoRefreshEnabled: true,
+          });
+        }
+        console.log("✅ App Check initialized successfully");
+      } catch (appCheckError) {
+        console.warn("⚠️ App Check initialization failed:", appCheckError);
+        // Continue without App Check for now
+      }
+
       firebaseInitialized = true;
-      console.log("🎉 React Native Firebase v22 initialization completed successfully");
+      console.log(
+        "🎉 React Native Firebase v22 initialization completed successfully"
+      );
 
       return {
         app,
@@ -159,7 +189,10 @@ async function initializeFirebase() {
         storage: storageInstance,
       };
     } catch (error) {
-      console.error("❌ Critical React Native Firebase initialization failed:", error);
+      console.error(
+        "❌ Critical React Native Firebase initialization failed:",
+        error
+      );
       console.error("Error details:", {
         name: error.name,
         message: error.message,
@@ -192,7 +225,10 @@ firebasePromise
     console.log("🔥 React Native Firebase services ready for export");
   })
   .catch((error) => {
-    console.error("🚨 React Native Firebase initialization promise failed:", error);
+    console.error(
+      "🚨 React Native Firebase initialization promise failed:",
+      error
+    );
   });
 
 // Safe getter functions with initialization checks
