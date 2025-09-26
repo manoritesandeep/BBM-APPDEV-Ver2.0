@@ -64,9 +64,12 @@ const PhoneAuthScreen = ({
     setPhoneNumber(cleaned);
   };
 
-  // Send OTP
+  // Send OTP with better UX messaging
   const handleSendOTP = async () => {
     try {
+      // Show initial loading message
+      showToast("Sending verification code...", "info", 2000);
+
       const result = await sendVerificationCode(phoneNumber);
       showToast(result.message, "success", 3000);
       setStep("verification");
@@ -220,6 +223,11 @@ const PhoneAuthScreen = ({
 
               <Text style={styles.infoText}>
                 We'll send you a 6-digit verification code via SMS
+              </Text>
+
+              <Text style={styles.securityInfo}>
+                🔒 A security verification may appear briefly to prevent
+                automated abuse
               </Text>
             </>
           ) : (
@@ -461,6 +469,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.accent500,
     textAlign: "center",
+  },
+  securityInfo: {
+    fontSize: 12,
+    color: Colors.accent400,
+    textAlign: "center",
+    marginTop: 8,
+    fontStyle: "italic",
+    paddingHorizontal: 20,
   },
 });
 

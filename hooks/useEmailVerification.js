@@ -16,7 +16,14 @@ export function useEmailVerificationStatus() {
   const [isChecking, setIsChecking] = useState(false);
 
   const checkVerificationStatus = async () => {
-    if (!authCtx.token || !authCtx.userId || userCtx.user?.emailVerified) {
+    // Skip verification check for phone users or already verified users
+    if (
+      !authCtx.token ||
+      !authCtx.userId ||
+      userCtx.user?.emailVerified ||
+      userCtx.user?.authProvider === "phone" ||
+      !userCtx.user?.email
+    ) {
       return false;
     }
 
@@ -43,12 +50,14 @@ export function useEmailVerificationStatus() {
     }
   };
 
-  // Check verification status when app becomes active
+  // Check verification status when app becomes active (skip phone users)
   useEffect(() => {
     if (
       authCtx.isAuthenticated &&
       userCtx.user &&
-      !userCtx.user.emailVerified
+      !userCtx.user.emailVerified &&
+      userCtx.user.authProvider !== "phone" &&
+      userCtx.user.email
     ) {
       checkVerificationStatus();
     }
