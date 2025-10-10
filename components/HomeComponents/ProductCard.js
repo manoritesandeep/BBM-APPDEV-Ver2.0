@@ -52,7 +52,7 @@ function ProductCard({ productGroup, onPress }) {
       minHeight: componentSizes.productCard.minHeight,
       backgroundColor: colors.card,
       borderRadius: 8,
-      marginRight: spacing.xs,
+      // Removed marginRight to allow parent container to control spacing
       ...deviceAdjustments.shadow,
       overflow: "hidden",
       ...layout.flexColumn,

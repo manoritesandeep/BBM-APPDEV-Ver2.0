@@ -88,14 +88,14 @@ function CategoryScreen({ route, navigation }) {
       flex: 1,
     },
     productListContent: {
-      paddingHorizontal: spacing.xs * 0.5,
+      paddingHorizontal: spacing.sm,
       paddingTop: spacing.xs,
       paddingBottom: spacing.lg,
     },
     columnWrapper: {
-      justifyContent: "space-between",
-      marginBottom: spacing.xs,
-      paddingHorizontal: spacing.xs * 0.5,
+      justifyContent: "flex-start",
+      marginBottom: spacing.sm,
+      gap: spacing.sm, // Modern gap property for even spacing
     },
     emptyContainer: {
       flex: 1,
