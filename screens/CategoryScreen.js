@@ -10,7 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../store/theme-context";
 import { useI18n } from "../store/i18n-context";
-import HorizontalProductCard from "../components/Products/HorizontalProductCard";
+import HorizontalProductCard from "../components/UI/HorizontalProductCard";
 import ProductModal from "../components/HomeComponents/ProductModal";
 import {
   typography,

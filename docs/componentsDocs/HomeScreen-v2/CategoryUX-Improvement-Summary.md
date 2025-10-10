@@ -29,7 +29,7 @@ Created a unified `HorizontalProductCard` component that:
 
 ### 1. New Component Created
 
-**File**: `/components/Products/HorizontalProductCard.js`
+**File**: `/components/UI/HorizontalProductCard.js`
 
 - Unified horizontal product card component
 - Theme-aware with light/dark mode support
@@ -216,11 +216,11 @@ Created a unified `HorizontalProductCard` component that:
 
 ## Files Modified
 
-1. ✅ `/components/Products/HorizontalProductCard.js` (Created)
+1. ✅ `/components/UI/HorizontalProductCard.js` (Created)
 2. ✅ `/screens/CategoryScreen.js` (Updated)
 3. ✅ `/components/HomeComponents/CategoryModal.js` (Updated)
 4. ✅ `/screens/SearchResultsScreen.js` (Updated)
-5. ✅ `/components/Products/index.js` (Created)
+5. ✅ `/components/Products/index.js` (Updated - exports from UI folder)
 6. ✅ `/docs/componentsDocs/HorizontalProductCard.md` (Created)
 
 ## Component Props
@@ -243,7 +243,7 @@ Any screen currently using `ProductCard` in a grid layout can be updated:
 
 ```javascript
 // 1. Update import
-import HorizontalProductCard from "../components/Products/HorizontalProductCard";
+import HorizontalProductCard from "../components/UI/HorizontalProductCard";
 
 // 2. Remove grid props
 // Remove: numColumns, columnWrapperStyle

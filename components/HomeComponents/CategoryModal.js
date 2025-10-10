@@ -11,7 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../store/theme-context";
 import { useI18n } from "../../store/i18n-context";
-import HorizontalProductCard from "../Products/HorizontalProductCard";
+import HorizontalProductCard from "../UI/HorizontalProductCard";
 import {
   typography,
   spacing,

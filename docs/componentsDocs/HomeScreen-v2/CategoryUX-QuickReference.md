@@ -60,7 +60,7 @@ We transformed the product browsing experience from a **2-column vertical grid**
 ## Usage Example
 
 ```javascript
-import HorizontalProductCard from "../components/Products/HorizontalProductCard";
+import HorizontalProductCard from "../components/UI/HorizontalProductCard";
 
 <FlatList
   data={products}

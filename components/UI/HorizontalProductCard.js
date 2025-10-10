@@ -11,12 +11,12 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { Colors } from "../../constants/styles";
 import { formatProductName } from "../../util/formatProductName";
-import Button from "../UI/Button";
-import CompactSizeSelector from "../UI/CompactSizeSelector";
+import Button from "./Button";
+import CompactSizeSelector from "./CompactSizeSelector";
 import { useI18n } from "../../store/i18n-context";
 import { useTheme } from "../../store/theme-context";
 import { CartContext } from "../../store/cart-context";
-import { useToast } from "../UI/ToastProvider";
+import { useToast } from "./ToastProvider";
 import {
   typography,
   spacing,
@@ -120,8 +120,10 @@ function HorizontalProductCard({
   }, [onAddToCart, selectedProduct, cartCtx, formattedProductName, showToast]);
 
   // Highlight search terms in product name
-  const highlightSearchTerms = (text, query) => {
-    if (!query) return text;
+  const renderProductName = (text, query) => {
+    if (!query) {
+      return <Text style={styles.normalText}>{text}</Text>;
+    }
 
     const regex = new RegExp(`(${query})`, "gi");
     const parts = text.split(regex);
@@ -337,9 +339,7 @@ function HorizontalProductCard({
           numberOfLines={2}
           allowFontScaling={true}
         >
-          {searchQuery
-            ? highlightSearchTerms(formattedProductName, searchQuery)
-            : formattedProductName}
+          {renderProductName(formattedProductName, searchQuery)}
         </Text>
 
         {/* Category and HSN Row */}

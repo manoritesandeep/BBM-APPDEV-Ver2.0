@@ -14,7 +14,7 @@ import { ProductsContext } from "../store/products-context";
 import { CartContext } from "../store/cart-context";
 import { searchProducts } from "../util/searchUtils";
 import { groupProductsByName } from "../util/groupedProductsByName";
-import HorizontalProductCard from "../components/Products/HorizontalProductCard";
+import HorizontalProductCard from "../components/UI/HorizontalProductCard";
 import { Colors } from "../constants/styles";
 import { spacing, layout } from "../constants/responsive";
 import { formatProductName } from "../util/formatProductName";

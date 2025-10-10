@@ -7,7 +7,7 @@
 ## Location
 
 ```
-components/Products/HorizontalProductCard.js
+components/UI/HorizontalProductCard.js
 ```
 
 ## Features
@@ -46,7 +46,7 @@ components/Products/HorizontalProductCard.js
 ### Basic Usage
 
 ```javascript
-import HorizontalProductCard from "../components/Products/HorizontalProductCard";
+import HorizontalProductCard from "../components/UI/HorizontalProductCard";
 
 <HorizontalProductCard productGroup={product} onPress={handleProductPress} />;
 ```
@@ -239,7 +239,7 @@ import ProductCard from "../components/HomeComponents/ProductCard";
 **After:**
 
 ```javascript
-import HorizontalProductCard from "../components/Products/HorizontalProductCard";
+import HorizontalProductCard from "../components/UI/HorizontalProductCard";
 
 <FlatList
   data={products}
@@ -273,7 +273,7 @@ import SearchResultCard from "../components/SearchComponents/SearchResultCard";
 **After:**
 
 ```javascript
-import HorizontalProductCard from "../components/Products/HorizontalProductCard";
+import HorizontalProductCard from "../components/UI/HorizontalProductCard";
 
 <HorizontalProductCard
   productGroup={item}
