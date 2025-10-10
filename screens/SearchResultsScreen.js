@@ -14,7 +14,7 @@ import { ProductsContext } from "../store/products-context";
 import { CartContext } from "../store/cart-context";
 import { searchProducts } from "../util/searchUtils";
 import { groupProductsByName } from "../util/groupedProductsByName";
-import SearchResultCard from "../components/SearchComponents/SearchResultCard";
+import HorizontalProductCard from "../components/Products/HorizontalProductCard";
 import { Colors } from "../constants/styles";
 import { spacing, layout } from "../constants/responsive";
 import { formatProductName } from "../util/formatProductName";
@@ -106,14 +106,19 @@ function SearchResultsScreenContent() {
   };
 
   const renderSearchResult = ({ item, index }) => (
-    <SearchResultCard
+    <HorizontalProductCard
       productGroup={item}
       onPress={handleProductPress}
       onAddToCart={handleAddToCart}
       searchQuery={searchQuery}
-      isLast={index === searchResults.length - 1}
+      isLast={index === displayResults.length - 1}
+      showCategory={true}
+      showHSN={true}
     />
   );
+
+  // Item separator component
+  const ItemSeparator = () => <View style={styles.itemSeparator} />;
 
   const renderEmptyState = () => {
     if (isSearching) {
@@ -206,17 +211,13 @@ function SearchResultsScreenContent() {
             data={displayResults}
             renderItem={renderSearchResult}
             keyExtractor={(item, index) => `${item.id}-${index}`}
+            ItemSeparatorComponent={ItemSeparator}
             contentContainerStyle={styles.listContainer}
             showsVerticalScrollIndicator={false}
             removeClippedSubviews={true}
             maxToRenderPerBatch={10}
             windowSize={10}
             initialNumToRender={8}
-            getItemLayout={(data, index) => ({
-              length: 160, // Increased height to account for the Add to Cart button
-              offset: 160 * index,
-              index,
-            })}
           />
         ) : (
           renderEmptyState()
@@ -300,7 +301,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   listContainer: {
-    padding: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  itemSeparator: {
+    height: spacing.sm,
   },
   loadingText: {
     marginTop: 12,

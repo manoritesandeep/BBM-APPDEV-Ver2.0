@@ -11,7 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../store/theme-context";
 import { useI18n } from "../../store/i18n-context";
-import ProductCard from "./ProductCard";
+import HorizontalProductCard from "../Products/HorizontalProductCard";
 import {
   typography,
   spacing,
@@ -98,14 +98,12 @@ function CategoryModal({
       backgroundColor: colors.primary100,
     },
     productListContent: {
-      paddingHorizontal: spacing.sm,
-      paddingTop: spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.sm,
       paddingBottom: spacing.lg,
     },
-    columnWrapper: {
-      justifyContent: "flex-start",
-      marginBottom: spacing.sm,
-      gap: spacing.sm, // Modern gap property for even spacing
+    itemSeparator: {
+      height: spacing.sm,
     },
     emptyContainer: {
       flex: 1,
@@ -135,9 +133,18 @@ function CategoryModal({
   };
 
   // Render individual product card
-  const renderProduct = ({ item }) => (
-    <ProductCard productGroup={item} onPress={onProductPress} />
+  const renderProduct = ({ item, index }) => (
+    <HorizontalProductCard
+      productGroup={item}
+      onPress={onProductPress}
+      isLast={index === productGroups?.length - 1}
+      showCategory={false} // Don't show category in category modal
+      showHSN={true}
+    />
   );
+
+  // Item separator component
+  const ItemSeparator = () => <View style={styles.itemSeparator} />;
 
   // Extract key for each product group
   const keyExtractor = (item, index) => {
@@ -200,8 +207,7 @@ function CategoryModal({
           data={productGroups}
           renderItem={renderProduct}
           keyExtractor={keyExtractor}
-          numColumns={2}
-          columnWrapperStyle={styles.columnWrapper}
+          ItemSeparatorComponent={ItemSeparator}
           style={styles.productList}
           contentContainerStyle={styles.productListContent}
           ListEmptyComponent={EmptyComponent}
