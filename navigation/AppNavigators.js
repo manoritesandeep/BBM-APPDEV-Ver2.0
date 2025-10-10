@@ -22,6 +22,7 @@ import {
 
 // Screen imports
 import HomeScreen from "../screens/HomeScreen";
+import CategoryScreen from "../screens/CategoryScreen";
 import UserScreen from "../screens/UserScreen";
 import CartScreen from "../screens/CartScreen";
 import BillingScreen from "../screens/BillingScreen";
@@ -96,6 +97,13 @@ export function HomeStackNavigator() {
         component={HomeScreen}
         options={{
           headerTitle: () => <SearchBarHeader />,
+        }}
+      />
+      <HomeStack.Screen
+        name="Category"
+        component={CategoryScreen}
+        options={{
+          headerBackTitle: "Back",
         }}
       />
       <HomeStack.Screen

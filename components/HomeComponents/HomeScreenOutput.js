@@ -13,7 +13,6 @@ import { Colors } from "../../constants/styles";
 import ProductModal from "./ProductModal";
 import CategoryCarousel from "./CategoryCarousel";
 import CategoryList from "./CategoryList";
-import CategoryModal from "./CategoryModal";
 import LoadingState from "../UI/LoadingState";
 import { groupProductsByName } from "../../util/groupedProductsByName";
 import { UserContext } from "../../store/user-context";
@@ -38,8 +37,6 @@ function HomeScreenOutput({ navigation }) {
   const { products, loading, error, refreshProducts } =
     useContext(ProductsContext);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedCategoryProducts, setSelectedCategoryProducts] = useState([]);
   // const [trackOrderVisible, setTrackOrderVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showVerificationBanner, setShowVerificationBanner] = useState(true);
@@ -99,17 +96,17 @@ function HomeScreenOutput({ navigation }) {
   }
 
   function handleCategoryPress(categoryName, productGroups) {
-    setSelectedCategory(categoryName);
-    setSelectedCategoryProducts(productGroups);
+    // Navigate to CategoryScreen instead of opening modal
+    // This allows users to browse multiple products in the same category
+    // without having to go back and reopen the category each time
+    navigation.navigate("Category", {
+      categoryName,
+      productGroups,
+    });
   }
 
   function closeModal() {
     setSelectedProduct(null);
-  }
-
-  function closeCategoryModal() {
-    setSelectedCategory(null);
-    setSelectedCategoryProducts([]);
   }
 
   const handleRefresh = async () => {
@@ -250,15 +247,6 @@ function HomeScreenOutput({ navigation }) {
           refreshing={refreshing}
         />
       </View>
-
-      {/* Category Modal - Shows all products when a category is selected */}
-      <CategoryModal
-        visible={!!selectedCategory}
-        onClose={closeCategoryModal}
-        categoryName={selectedCategory}
-        productGroups={selectedCategoryProducts}
-        onProductPress={handleProductPress}
-      />
 
       {/* Product Modal - Shows product details */}
       <ProductModal
