@@ -298,6 +298,13 @@
   "home": {
     "welcomeUser": "Welcome to Build Bharat Mart {{userName}}",
     "subtitle": "Upgrade your home with the best.",
+    "browseByCategory": "Browse by Category",
+    "searchPlaceholder": "Search for products...",
+    "categoryList": "Categories list",
+    "viewAllProducts": "View All Products",
+    "noCategoriesFound": "No categories found",
+    "noProductsInCategory": "No products found in this category",
+    "productsCount": "{{count}} products available",
     "pullToRefresh": "Pull to refresh",
     "recommendedForYou": "Recommended For You",
     "discoverProducts": "Discover top products for all your home improvement needs.",

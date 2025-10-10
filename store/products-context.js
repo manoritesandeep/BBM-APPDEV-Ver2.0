@@ -1,6 +1,10 @@
-// // Major update: Data read from firestore database
+// // Major update: Data read from firestore database with caching and optimization
 import { createContext, useReducer, useEffect, useState } from "react";
 import { readCollection } from "../util/firebaseUtils";
+
+// Cache configuration
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const CACHE_KEY = "products_cache";
 
 export const ProductsContext = createContext({
   products: [],
@@ -9,6 +13,7 @@ export const ProductsContext = createContext({
   updateProduct: (id, productData) => {},
   setProducts: (products) => {},
   refreshProducts: () => {},
+  getCategoryProducts: (category) => {},
   loading: false,
   error: null,
 });
@@ -40,6 +45,7 @@ function ProductsContextProvider({ children }) {
   const [productsState, dispatch] = useReducer(productsReducer, []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastFetchTime, setLastFetchTime] = useState(null);
 
   function addProduct(productData) {
     dispatch({ type: "ADD", payload: productData });
@@ -57,9 +63,28 @@ function ProductsContextProvider({ children }) {
     dispatch({ type: "SET", payload: products });
   }
 
+  // Get products for a specific category (memoized for performance)
+  function getCategoryProducts(category) {
+    return productsState.filter((product) => product.category === category);
+  }
+
+  // Check if cache is still valid
+  function isCacheValid() {
+    if (!lastFetchTime) return false;
+    const now = Date.now();
+    return now - lastFetchTime < CACHE_DURATION;
+  }
+
   // Fetch products from Firestore when provider mounts
   useEffect(() => {
     async function fetchProducts() {
+      // Skip if cache is still valid
+      if (isCacheValid() && productsState.length > 0) {
+        console.log("✅ Using cached products data");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
@@ -69,6 +94,7 @@ function ProductsContextProvider({ children }) {
 
         if (fetchedProductsData && fetchedProductsData.length > 0) {
           setProducts(fetchedProductsData);
+          setLastFetchTime(Date.now());
           console.log(
             `✅ Successfully loaded ${fetchedProductsData.length} products`
           );
@@ -95,11 +121,12 @@ function ProductsContextProvider({ children }) {
     try {
       setLoading(true);
       setError(null);
-      // console.log("🔄 Refreshing products...");
+      console.log("🔄 Refreshing products...");
 
       const fetchedProductsData = await readCollection("products");
       setProducts(fetchedProductsData || []); // Ensure fallback to empty array
-      // console.log("✅ Products refreshed successfully");
+      setLastFetchTime(Date.now()); // Update cache timestamp
+      console.log("✅ Products refreshed successfully");
     } catch (e) {
       console.error("❌ Failed to refresh products:", e);
       setError(e.message || "Failed to refresh products");
@@ -115,6 +142,7 @@ function ProductsContextProvider({ children }) {
     updateProduct,
     setProducts,
     refreshProducts,
+    getCategoryProducts,
     loading,
     error,
   };

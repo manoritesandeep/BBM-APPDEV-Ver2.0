@@ -12,6 +12,9 @@ import { ProductsContext } from "../../store/products-context";
 import { Colors } from "../../constants/styles";
 import ProductModal from "./ProductModal";
 import CategoryCarousel from "./CategoryCarousel";
+import CategoryList from "./CategoryList";
+import CategoryModal from "./CategoryModal";
+import HomeSearchBar from "./HomeSearchBar";
 import LoadingState from "../UI/LoadingState";
 import { groupProductsByName } from "../../util/groupedProductsByName";
 import { UserContext } from "../../store/user-context";
@@ -34,6 +37,8 @@ function HomeScreenOutput({ navigation }) {
   const { products, loading, error, refreshProducts } =
     useContext(ProductsContext);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategoryProducts, setSelectedCategoryProducts] = useState([]);
   // const [trackOrderVisible, setTrackOrderVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showVerificationBanner, setShowVerificationBanner] = useState(true);
@@ -59,6 +64,20 @@ function HomeScreenOutput({ navigation }) {
     return grouped;
   }, [groupedProducts]);
 
+  // Transform category data for CategoryList component
+  const categories = useMemo(() => {
+    return Object.entries(productGroupsByCategory)
+      .map(([name, productGroups]) => ({
+        name,
+        productGroups,
+        count: productGroups.length,
+      }))
+      .sort((a, b) => {
+        // Sort by number of products (descending) to show popular categories first
+        return b.count - a.count;
+      });
+  }, [productGroupsByCategory]);
+
   // Get top-rated product groups for recommendations (rating >= 4)
   const recommendedProductGroups = useMemo(
     () =>
@@ -67,14 +86,6 @@ function HomeScreenOutput({ navigation }) {
         .sort((a, b) => b[0].rating - a[0].rating)
         .slice(0, 10),
     [groupedProducts]
-  );
-
-  // For each category, get top 5 rated product groups
-  const categoryCarousels = Object.entries(productGroupsByCategory).map(
-    ([category, groups]) => ({
-      category,
-      products: groups.sort((a, b) => b[0].rating - a[0].rating).slice(0, 5),
-    })
   );
 
   function handleProductPress(productGroup) {
@@ -86,8 +97,18 @@ function HomeScreenOutput({ navigation }) {
     setSelectedProduct(product);
   }
 
+  function handleCategoryPress(categoryName, productGroups) {
+    setSelectedCategory(categoryName);
+    setSelectedCategoryProducts(productGroups);
+  }
+
   function closeModal() {
     setSelectedProduct(null);
+  }
+
+  function closeCategoryModal() {
+    setSelectedCategory(null);
+    setSelectedCategoryProducts([]);
   }
 
   const handleRefresh = async () => {
@@ -184,20 +205,11 @@ function HomeScreenOutput({ navigation }) {
       edges={["left", "right"]}
       backgroundColor={colors.background}
     >
-      <ScrollView
-        style={dynamicStyles.container}
-        contentContainerStyle={{ paddingBottom: 16 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={[colors.primary500, colors.accent500]}
-            tintColor={colors.primary500}
-            title={t("home.pullToRefresh")}
-            titleColor={colors.primary500}
-          />
-        }
-      >
+      <View style={dynamicStyles.container}>
+        {/* Search Bar - Always visible at top */}
+        <HomeSearchBar />
+
+        {/* Delivery Address Section */}
         <DeliveryAddressSection />
 
         {/* Email Verification Banner - Only for users who have email but haven't verified */}
@@ -216,31 +228,38 @@ function HomeScreenOutput({ navigation }) {
           {t("home.welcomeUser", { userName })}
         </Text>
         <Text style={dynamicStyles.subtitle} allowFontScaling={true}>
-          {t("home.subtitle")}
+          {t("home.browseByCategory") || "Browse by Category"}
         </Text>
 
-        {/* <CategoryQuickPicker /> */}
-
-        <CategoryCarousel
-          title={t("home.recommendedForYou")}
-          products={recommendedProductGroups}
-          onProductPress={handleProductPress}
-        />
-
-        {categoryCarousels.map(({ category, products }) => (
+        {/* Recommended Products Carousel - Kept for quick access to top products */}
+        {recommendedProductGroups.length > 0 && (
           <CategoryCarousel
-            key={category}
-            title={category}
-            products={products}
+            title={t("home.recommendedForYou")}
+            products={recommendedProductGroups}
             onProductPress={handleProductPress}
           />
-        ))}
-      </ScrollView>
-      {/* <TrackOrderModal
-        visible={trackOrderVisible}
-        onClose={() => setTrackOrderVisible(false)}
-      /> */}
+        )}
 
+        {/* Category List - Main browsing interface */}
+        <CategoryList
+          categories={categories}
+          onCategoryPress={handleCategoryPress}
+          loading={loading}
+          onRefresh={handleRefresh}
+          refreshing={refreshing}
+        />
+      </View>
+
+      {/* Category Modal - Shows all products when a category is selected */}
+      <CategoryModal
+        visible={!!selectedCategory}
+        onClose={closeCategoryModal}
+        categoryName={selectedCategory}
+        productGroups={selectedCategoryProducts}
+        onProductPress={handleProductPress}
+      />
+
+      {/* Product Modal - Shows product details */}
       <ProductModal
         visible={!!selectedProduct}
         onClose={closeModal}
