@@ -536,8 +536,49 @@ export function useBillingLogic() {
       // Check if user can place orders (phone users don't need email)
       if (!PhoneUserEmailService.canPlaceOrders(user)) {
         Alert.alert(
-          "Error",
-          "Please verify your email address or phone number to place orders."
+          "Email Verification Required",
+          "To place orders with your account, please verify your email address or phone number. Alternatively, you can log out and checkout as a guest.",
+          [
+            {
+              text: "Verify Now",
+              onPress: () => {
+                navigation.navigate("UserScreen", {
+                  screen: "EmailVerification",
+                  params: {
+                    userEmail: user.email,
+                  },
+                });
+              },
+            },
+            {
+              text: "Checkout as Guest",
+              onPress: () => {
+                Alert.alert(
+                  "Logout Required",
+                  "To checkout as guest, you need to log out first. Your cart items will be preserved. Do you want to continue?",
+                  [
+                    {
+                      text: "Yes, Logout",
+                      onPress: async () => {
+                        await authCtx.logout();
+                        // The guest modal will be shown automatically after logout
+                        // because authCtx.isAuthenticated will become false
+                        setGuestModalVisible(true);
+                      },
+                    },
+                    {
+                      text: "Cancel",
+                      style: "cancel",
+                    },
+                  ]
+                );
+              },
+            },
+            {
+              text: "Cancel",
+              style: "cancel",
+            },
+          ]
         );
         return;
       }
@@ -633,8 +674,49 @@ export function useBillingLogic() {
       // Check if user can place orders (phone users don't need email)
       if (!PhoneUserEmailService.canPlaceOrders(user)) {
         Alert.alert(
-          "Error",
-          "Please verify your email address or phone number to place orders."
+          "Email Verification Required",
+          "To place orders with your account, please verify your email address or phone number. Alternatively, you can log out and checkout as a guest.",
+          [
+            {
+              text: "Verify Now",
+              onPress: () => {
+                navigation.navigate("UserScreen", {
+                  screen: "EmailVerification",
+                  params: {
+                    userEmail: user.email,
+                  },
+                });
+              },
+            },
+            {
+              text: "Checkout as Guest",
+              onPress: () => {
+                Alert.alert(
+                  "Logout Required",
+                  "To checkout as guest, you need to log out first. Your cart items will be preserved. Do you want to continue?",
+                  [
+                    {
+                      text: "Yes, Logout",
+                      onPress: async () => {
+                        await authCtx.logout();
+                        // The guest modal will be shown automatically after logout
+                        // because authCtx.isAuthenticated will become false
+                        setGuestModalVisible(true);
+                      },
+                    },
+                    {
+                      text: "Cancel",
+                      style: "cancel",
+                    },
+                  ]
+                );
+              },
+            },
+            {
+              text: "Cancel",
+              style: "cancel",
+            },
+          ]
         );
         return;
       }
