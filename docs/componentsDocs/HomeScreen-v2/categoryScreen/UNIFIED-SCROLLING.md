@@ -1,14 +1,17 @@
 # Unified Scrolling Implementation
 
 ## Overview
+
 Made the "Recommended for you" carousel scrollable along with the category list to improve browsing experience when dealing with hundreds of categories.
 
 ## Problem Solved
+
 **Previous Issue**: The "Recommended for you" section was fixed at the top, and the category list scrolled independently below it. With hundreds of categories, this consumed valuable screen space and made it difficult to browse categories efficiently.
 
 **User Feedback**: "The recommended for you section does not scroll and is fixed, lets make that scrollable as well, as we will have 100s of categories, it will be difficult to browse with that section intact."
 
 ## Solution
+
 Restructured the home screen to use a single unified scrollable list with the recommended carousel as a header component. Now users can scroll past the recommendations to focus on browsing categories.
 
 ## Implementation Details
@@ -16,6 +19,7 @@ Restructured the home screen to use a single unified scrollable list with the re
 ### Architecture Change
 
 **Before**:
+
 ```
 SafeAreaWrapper
 └── View (flex: 1)
@@ -28,6 +32,7 @@ SafeAreaWrapper
 ```
 
 **After**:
+
 ```
 SafeAreaWrapper
 ├── DeliveryAddressSection (fixed at top)
@@ -53,11 +58,13 @@ SafeAreaWrapper
 ### 1. **MODIFIED**: `components/HomeComponents/CategoryList.js`
 
 **Changes**:
+
 - Added `ListHeaderComponent` prop to function parameters
 - Added JSDoc documentation for new prop
 - Passed `ListHeaderComponent` to FlatList component
 
 **Code Addition**:
+
 ```javascript
 function CategoryList({
   categories,
@@ -65,7 +72,7 @@ function CategoryList({
   loading = false,
   onRefresh,
   refreshing = false,
-  ListHeaderComponent,  // ← New prop
+  ListHeaderComponent, // ← New prop
 }) {
   // ... existing code ...
 
@@ -75,7 +82,7 @@ function CategoryList({
       renderItem={renderCategoryCard}
       keyExtractor={keyExtractor}
       ItemSeparatorComponent={ItemSeparator}
-      ListHeaderComponent={ListHeaderComponent}  // ← Added this line
+      ListHeaderComponent={ListHeaderComponent} // ← Added this line
       ListEmptyComponent={EmptyComponent}
       // ... rest of props
     />
@@ -86,40 +93,43 @@ function CategoryList({
 ### 2. **MODIFIED**: `components/HomeComponents/HomeScreenOutput.js`
 
 **Changes**:
+
 - Removed outer `View` container wrapper
 - Moved DeliveryAddressSection and EmailVerificationBanner outside CategoryList (stay fixed)
 - Moved welcome text, subtitle, and CategoryCarousel into `ListHeaderComponent` prop
 - These elements now scroll with the category list
 
 **Before**:
+
 ```javascript
 <View style={dynamicStyles.container}>
   <DeliveryAddressSection />
   <EmailVerificationBanner ... />
   <Text style={dynamicStyles.welcomeTitle}>...</Text>
   <Text style={dynamicStyles.subtitle}>...</Text>
-  
+
   {recommendedProductGroups.length > 0 && (
     <CategoryCarousel ... />
   )}
-  
+
   <CategoryList categories={categories} ... />
 </View>
 ```
 
 **After**:
+
 ```javascript
 <>
   <DeliveryAddressSection />
   <EmailVerificationBanner ... />
-  
+
   <CategoryList
     categories={categories}
     ListHeaderComponent={
       <>
         <Text style={dynamicStyles.welcomeTitle}>...</Text>
         <Text style={dynamicStyles.subtitle}>...</Text>
-        
+
         {recommendedProductGroups.length > 0 && (
           <CategoryCarousel ... />
         )}
@@ -134,6 +144,7 @@ function CategoryList({
 ### Scrolling Behavior
 
 **Before**:
+
 1. User opens home screen
 2. Recommended carousel always visible at top
 3. Categories scroll below it
@@ -141,6 +152,7 @@ function CategoryList({
 5. User must scroll through limited viewport to find categories
 
 **After**:
+
 1. User opens home screen
 2. Recommended carousel visible initially
 3. User scrolls down → recommendations scroll off screen
@@ -150,16 +162,19 @@ function CategoryList({
 ### Benefits by Scenario
 
 #### Scenario 1: New User (Recommendations Helpful)
+
 - Sees recommendations first ✓
 - Can scroll down to explore all categories ✓
 - Can scroll back to recommendations ✓
 
 #### Scenario 2: Returning User (Knows What They Want)
+
 - Sees recommendations briefly
 - **Scrolls past them immediately** to find specific category ✓
 - Gets full screen for category browsing ✓
 
 #### Scenario 3: Browsing 100+ Categories
+
 - Can see more categories at once (no fixed recommendations) ✓
 - Faster navigation to categories further down the list ✓
 - Better overview of available categories ✓
@@ -167,6 +182,7 @@ function CategoryList({
 ## Technical Characteristics
 
 ### Performance
+
 - **FlatList Virtualization**: Still applies to category items
 - **Header Rendering**: Recommended carousel renders once as header
 - **Memory Usage**: Same or better (fewer nested containers)
@@ -175,6 +191,7 @@ function CategoryList({
 ### Layout Metrics
 
 **Before** (Fixed Recommendations):
+
 ```
 Screen Height: 100%
 ├── Fixed Content: 30-40%
@@ -185,6 +202,7 @@ Screen Height: 100%
 ```
 
 **After** (Scrollable Recommendations):
+
 ```
 Screen Height: 100%
 ├── Fixed Content: 8-15%
@@ -199,6 +217,7 @@ Screen Height: 100%
 **Net Gain**: 15-22% more screen space for categories after scrolling
 
 ### Pull-to-Refresh
+
 - Still works on entire list
 - Refreshes both recommendations and categories
 - Smooth gesture handling
@@ -213,25 +232,29 @@ Screen Height: 100%
 ## Code Quality Improvements
 
 ### Cleaner Structure
+
 - Removed unnecessary View wrapper
 - Reduced nesting depth
 - More React-like composition pattern
 
 ### Better Separation of Concerns
+
 - Fixed content (address, banner) stays outside list
 - Scrollable content (everything else) inside list
 - Clear visual hierarchy
 
 ### Future Extensibility
+
 Easy to add more header content:
+
 ```javascript
 <CategoryList
   ListHeaderComponent={
     <>
       <WelcomeSection />
       <RecommendedCarousel />
-      <PromotionalBanner />  ← Easy to add
-      <CategoryFilters />     ← Easy to add
+      <PromotionalBanner /> ← Easy to add
+      <CategoryFilters /> ← Easy to add
     </>
   }
 />
@@ -256,6 +279,7 @@ Easy to add more header content:
 ## Performance Benchmarks
 
 Expected improvements:
+
 - **Scroll Performance**: Same or slightly better (fewer nested views)
 - **Memory Usage**: Slightly reduced (removed container View)
 - **Initial Render**: Same (header renders once)
@@ -280,17 +304,21 @@ Expected improvements:
 ## User Feedback Addressed
 
 ✅ "The recommended for you section does not scroll and is fixed"
+
 - **Solution**: Now scrolls with the page
 
 ✅ "It will be difficult to browse with that section intact"
+
 - **Solution**: Scrolls off screen, freeing up space for categories
 
 ✅ "We will have 100s of categories"
+
 - **Solution**: More screen space available for category browsing
 
 ## Conclusion
 
 This change transforms the home screen from a split-scroll layout to a unified scrollable experience. Users get the best of both worlds:
+
 - Recommendations visible initially for discovery
 - Full screen space available for category browsing when needed
 
