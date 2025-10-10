@@ -21,6 +21,7 @@ import { typography, spacing, scaleVertical } from "../../constants/responsive";
  * @param {boolean} loading - Whether categories are still loading
  * @param {Function} onRefresh - Optional pull-to-refresh handler
  * @param {boolean} refreshing - Whether refresh is in progress
+ * @param {React.Component} ListHeaderComponent - Optional header component to render above the list
  */
 function CategoryList({
   categories,
@@ -28,6 +29,7 @@ function CategoryList({
   loading = false,
   onRefresh,
   refreshing = false,
+  ListHeaderComponent,
 }) {
   const { colors } = useTheme();
   const { t } = useI18n();
@@ -91,6 +93,7 @@ function CategoryList({
       renderItem={renderCategoryCard}
       keyExtractor={keyExtractor}
       ItemSeparatorComponent={ItemSeparator}
+      ListHeaderComponent={ListHeaderComponent}
       ListEmptyComponent={EmptyComponent}
       contentContainerStyle={styles.contentContainer}
       style={styles.container}

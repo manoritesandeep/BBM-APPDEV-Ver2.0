@@ -118,6 +118,27 @@ function HomeScreenOutput({ navigation }) {
     }
   };
 
+  // Header component for the category list
+  const ListHeader = () => (
+    <>
+      <Text style={dynamicStyles.welcomeTitle} allowFontScaling={true}>
+        {t("home.welcomeUser", { userName })}
+      </Text>
+      <Text style={dynamicStyles.subtitle} allowFontScaling={true}>
+        {t("home.browseByCategory") || "Browse by Category"}
+      </Text>
+
+      {/* Recommended Products Carousel - Now scrollable with categories */}
+      {recommendedProductGroups.length > 0 && (
+        <CategoryCarousel
+          title={t("home.recommendedForYou")}
+          products={recommendedProductGroups}
+          onProductPress={handleProductPress}
+        />
+      )}
+    </>
+  );
+
   // Create dynamic styles based on theme
   const dynamicStyles = StyleSheet.create({
     container: {
@@ -203,50 +224,30 @@ function HomeScreenOutput({ navigation }) {
       edges={["left", "right"]}
       backgroundColor={colors.background}
     >
-      <View style={dynamicStyles.container}>
-        {/* Search Bar - Always visible at top */}
-        {/* <HomeSearchBar /> */}
+      {/* Delivery Address Section - Fixed at top */}
+      <DeliveryAddressSection />
 
-        {/* Delivery Address Section */}
-        <DeliveryAddressSection />
-
-        {/* Email Verification Banner - Only for users who have email but haven't verified */}
-        {showVerificationBanner &&
-          userCtx.user &&
-          !userCtx.user.emailVerified &&
-          userCtx.user.email &&
-          userCtx.user.email.trim() !== "" && (
-            <EmailVerificationBanner
-              navigation={navigation}
-              onDismiss={() => setShowVerificationBanner(false)}
-            />
-          )}
-
-        <Text style={dynamicStyles.welcomeTitle} allowFontScaling={true}>
-          {t("home.welcomeUser", { userName })}
-        </Text>
-        <Text style={dynamicStyles.subtitle} allowFontScaling={true}>
-          {t("home.browseByCategory") || "Browse by Category"}
-        </Text>
-
-        {/* Recommended Products Carousel - Kept for quick access to top products */}
-        {recommendedProductGroups.length > 0 && (
-          <CategoryCarousel
-            title={t("home.recommendedForYou")}
-            products={recommendedProductGroups}
-            onProductPress={handleProductPress}
+      {/* Email Verification Banner - Only for users who have email but haven't verified */}
+      {showVerificationBanner &&
+        userCtx.user &&
+        !userCtx.user.emailVerified &&
+        userCtx.user.email &&
+        userCtx.user.email.trim() !== "" && (
+          <EmailVerificationBanner
+            navigation={navigation}
+            onDismiss={() => setShowVerificationBanner(false)}
           />
         )}
 
-        {/* Category List - Main browsing interface */}
-        <CategoryList
-          categories={categories}
-          onCategoryPress={handleCategoryPress}
-          loading={loading}
-          onRefresh={handleRefresh}
-          refreshing={refreshing}
-        />
-      </View>
+      {/* Category List with scrollable header - Main browsing interface */}
+      <CategoryList
+        categories={categories}
+        onCategoryPress={handleCategoryPress}
+        loading={loading}
+        onRefresh={handleRefresh}
+        refreshing={refreshing}
+        ListHeaderComponent={ListHeader}
+      />
 
       {/* Product Modal - Shows product details */}
       <ProductModal
