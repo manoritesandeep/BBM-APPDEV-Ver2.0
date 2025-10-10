@@ -1,27 +1,34 @@
 # Guest Checkout Email Verification Fix
 
 ## Issue Description
+
 When a user who is logged in but hasn't verified their email attempts to checkout, they were seeing an email verification popup that only offered two options:
+
 1. Verify Now
 2. Cancel
 
 This prevented users from checking out as a guest, which should be an available option.
 
 ## Root Cause
+
 The issue was occurring in **TWO locations**:
 
 ### 1. Cart Screen (Primary Issue)
+
 In `components/CartComponents/CartScreenOutput.js`, when the user clicks the "Checkout" button, it calls `requireVerification()` from the `useEmailVerificationGuard` hook. This hook was showing the email verification popup **before** the user even reached the billing screen.
 
 ### 2. Billing Screen (Secondary Issue)
+
 In `hooks/useBillingLogic.js`, when placing an order, it also checked for email verification but didn't provide a guest checkout option.
 
 The verification logic was:
+
 1. If user is authenticated → check if they can place orders
 2. If they can't → show email verification popup with no guest option
 3. This blocked authenticated-but-unverified users from proceeding
 
 ## Solution
+
 Modified **both** the email verification guard and billing logic to provide three options when an authenticated but unverified user tries to checkout:
 
 1. **Verify Now** - Navigate to email verification screen
@@ -33,8 +40,10 @@ Modified **both** the email verification guard and billing logic to provide thre
 #### File 1: `hooks/useEmailVerificationGuard.js` ⭐ (PRIMARY FIX)
 
 **Changes:**
+
 1. Added `AuthContext` import to check authentication status
 2. Updated `useEmailVerificationGuard` hook:
+
    - Allow unauthenticated users to proceed (guest flow)
    - For authenticated but unverified users, show 3-option alert
    - Include "Checkout as Guest" option with logout confirmation
@@ -45,6 +54,7 @@ Modified **both** the email verification guard and billing logic to provide thre
    - Include "Proceed as Guest" option with logout confirmation
 
 **New Logic Flow:**
+
 ```javascript
 const requireVerification = (featureName, callback) => {
   // 1. Not authenticated? Allow proceeding (guest checkout)
@@ -127,7 +137,7 @@ if (!PhoneUserEmailService.canPlaceOrders(user)) {
 3. System detects user is authenticated but unverified
 4. Alert appears with 3 options:
    - **Verify Now**: Takes user to email verification screen
-   - **Checkout as Guest**: 
+   - **Checkout as Guest**:
      - Shows logout confirmation dialog
      - If confirmed, logs user out
      - Navigates to billing screen
@@ -142,6 +152,7 @@ if (!PhoneUserEmailService.canPlaceOrders(user)) {
 4. Alert appears with 3 options (same as above)
 
 ### Benefits
+
 - ✅ Users are no longer blocked from completing their purchase
 - ✅ Clear path for guest checkout even if logged in
 - ✅ Cart preservation during logout ensures no items are lost
@@ -152,6 +163,7 @@ if (!PhoneUserEmailService.canPlaceOrders(user)) {
 ## Testing Recommendations
 
 ### Test Case 1: Cart Screen Checkout Flow
+
 1. Login with unverified email
 2. Add items to cart
 3. Click "Checkout" button
@@ -164,6 +176,7 @@ if (!PhoneUserEmailService.canPlaceOrders(user)) {
 10. **Complete**: Guest checkout
 
 ### Test Case 2: Verify Now Flow
+
 1. Login with unverified email
 2. Add items to cart
 3. Click "Checkout"
@@ -175,6 +188,7 @@ if (!PhoneUserEmailService.canPlaceOrders(user)) {
 9. **Verify**: Should proceed without popup
 
 ### Test Case 3: Billing Screen COD Order
+
 1. Login with unverified email
 2. Add items to cart
 3. Somehow reach billing screen (if possible)
@@ -183,6 +197,7 @@ if (!PhoneUserEmailService.canPlaceOrders(user)) {
 6. **Test**: "Checkout as Guest" option
 
 ### Test Case 4: Billing Screen Razorpay Order
+
 1. Login with unverified email
 2. Add items to cart
 3. Select Razorpay payment
@@ -190,6 +205,7 @@ if (!PhoneUserEmailService.canPlaceOrders(user)) {
 5. **Verify**: Alert with 3 options appears
 
 ### Test Case 5: Guest User Flow (Baseline)
+
 1. **Don't login** (guest user)
 2. Add items to cart
 3. Click "Checkout"
@@ -198,6 +214,7 @@ if (!PhoneUserEmailService.canPlaceOrders(user)) {
 6. **Verify**: Guest modal appears
 
 ### Test Case 6: Verified User Flow (Baseline)
+
 1. Login with **verified** email/phone
 2. Add items to cart
 3. Click "Checkout"
@@ -206,6 +223,7 @@ if (!PhoneUserEmailService.canPlaceOrders(user)) {
 6. **Proceed**: Normal checkout
 
 ### Test Case 7: Cart Preservation
+
 1. Login with unverified email
 2. Add specific items to cart (note them)
 3. Click "Checkout"
@@ -215,6 +233,7 @@ if (!PhoneUserEmailService.canPlaceOrders(user)) {
 7. **Complete**: Guest checkout with those items
 
 ## Related Files
+
 - `/hooks/useEmailVerificationGuard.js` - **PRIMARY FIX** - Email verification guard
 - `/hooks/useBillingLogic.js` - **SECONDARY FIX** - Billing logic
 - `/components/CartComponents/CartScreenOutput.js` - Cart screen using verification guard
@@ -223,9 +242,11 @@ if (!PhoneUserEmailService.canPlaceOrders(user)) {
 - `/screens/BillingScreen.js` - Billing screen UI
 
 ## Date
+
 October 10, 2025
 
 ## Notes
+
 - The primary fix is in `useEmailVerificationGuard.js` as this is where the popup first appears
 - The secondary fix in `useBillingLogic.js` provides a safety net if the user somehow bypasses the cart verification
 - Both HOC (`withEmailVerification`) and hook (`useEmailVerificationGuard`) were updated for consistency
