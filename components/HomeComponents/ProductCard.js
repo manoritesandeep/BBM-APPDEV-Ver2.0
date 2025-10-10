@@ -1,5 +1,6 @@
 import { useState, useContext } from "react";
 import { TouchableOpacity, Image, Text, StyleSheet, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../constants/styles";
 import { formatProductName } from "../../util/formatProductName";
 import { CartContext } from "../../store/cart-context";
@@ -72,6 +73,27 @@ function ProductCard({ productGroup, onPress }) {
       marginBottom: spacing.xs * 0.5,
       backgroundColor: colors.surface,
       resizeMode: "contain",
+    },
+    placeholderContainer: {
+      width: "100%",
+      height: scaleVertical(60),
+      borderRadius: scaleSize(4),
+      marginBottom: spacing.xs * 0.5,
+      backgroundColor: colors.primary100,
+      justifyContent: "center",
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: colors.border || colors.primary200,
+      borderStyle: "dashed",
+    },
+    placeholderIcon: {
+      marginBottom: spacing.xs * 0.25,
+    },
+    placeholderText: {
+      ...typography.caption,
+      color: colors.textSecondary,
+      fontSize: scaleSize(10),
+      textAlign: "center",
     },
     name: {
       ...typography.bodyCompact,
@@ -156,10 +178,7 @@ function ProductCard({ productGroup, onPress }) {
     },
   };
 
-  const imageSource =
-    product.imageUrl && product.imageUrl.trim() !== ""
-      ? { uri: product.imageUrl }
-      : require("../../assets/placeholder.png");
+  const hasValidImage = product.imageUrl && product.imageUrl.trim() !== "";
 
   function addToCartHandler() {
     cartCtx.addToCart(product, 1);
@@ -189,7 +208,28 @@ function ProductCard({ productGroup, onPress }) {
         onPress={handleCardPress}
         activeOpacity={0.7}
       >
-        <Image source={imageSource} style={styles.image} resizeMode="contain" />
+        {/* Image or Placeholder */}
+        {hasValidImage ? (
+          <Image
+            source={{ uri: product.imageUrl }}
+            style={styles.image}
+            resizeMode="contain"
+            defaultSource={require("../../assets/placeholder.png")}
+          />
+        ) : (
+          <View style={styles.placeholderContainer}>
+            <Ionicons
+              name="image-outline"
+              size={32}
+              color={colors.textSecondary}
+              style={styles.placeholderIcon}
+            />
+            <Text style={styles.placeholderText} allowFontScaling={true}>
+              No Image
+            </Text>
+          </View>
+        )}
+
         <Text style={styles.name} numberOfLines={3} allowFontScaling={true}>
           {formattedProductName}
         </Text>

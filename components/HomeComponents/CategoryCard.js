@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../store/theme-context";
 import {
   typography,
@@ -96,11 +97,15 @@ function CategoryCard({ category, productGroups, onPress, productCount }) {
       backgroundColor: colors.primary100,
       justifyContent: "center",
       alignItems: "center",
+      borderWidth: 1,
+      borderColor: colors.border || colors.primary200,
+      borderStyle: "dashed",
     },
     placeholderText: {
       ...typography.caption,
       color: colors.textSecondary,
-      fontSize: scaleSize(10),
+      fontSize: scaleSize(9),
+      marginTop: spacing.xs * 0.25,
     },
     footer: {
       ...layout.flexRow,
@@ -158,7 +163,7 @@ function CategoryCard({ category, productGroups, onPress, productCount }) {
               key={`${product.id}-${index}`}
               style={styles.previewImageWrapper}
             >
-              {product.imageUrl ? (
+              {product.imageUrl && product.imageUrl.trim() !== "" ? (
                 <Image
                   source={{ uri: product.imageUrl }}
                   style={styles.previewImage}
@@ -166,6 +171,11 @@ function CategoryCard({ category, productGroups, onPress, productCount }) {
                 />
               ) : (
                 <View style={styles.placeholderImage}>
+                  <Ionicons
+                    name="image-outline"
+                    size={24}
+                    color={colors.textSecondary}
+                  />
                   <Text style={styles.placeholderText}>No Image</Text>
                 </View>
               )}
@@ -175,6 +185,11 @@ function CategoryCard({ category, productGroups, onPress, productCount }) {
           // Fallback for empty category
           <View style={styles.previewImageWrapper}>
             <View style={styles.placeholderImage}>
+              <Ionicons
+                name="cube-outline"
+                size={28}
+                color={colors.textSecondary}
+              />
               <Text style={styles.placeholderText}>No Products</Text>
             </View>
           </View>

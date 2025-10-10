@@ -14,7 +14,6 @@ import ProductModal from "./ProductModal";
 import CategoryCarousel from "./CategoryCarousel";
 import CategoryList from "./CategoryList";
 import CategoryModal from "./CategoryModal";
-import HomeSearchBar from "./HomeSearchBar";
 import LoadingState from "../UI/LoadingState";
 import { groupProductsByName } from "../../util/groupedProductsByName";
 import { UserContext } from "../../store/user-context";
@@ -24,6 +23,8 @@ import EmailVerificationBanner from "../UI/EmailVerificationBanner";
 import { typography, spacing, scaleVertical } from "../../constants/responsive";
 import { useI18n } from "../../store/i18n-context";
 import { useTheme } from "../../store/theme-context";
+
+// import HomeSearchBar from "./HomeSearchBar";
 
 // will add as a future feature
 // import CategoryQuickPicker from "../MenuComponents/CategoryComponents/CategoryQuickPicker";
@@ -207,7 +208,7 @@ function HomeScreenOutput({ navigation }) {
     >
       <View style={dynamicStyles.container}>
         {/* Search Bar - Always visible at top */}
-        <HomeSearchBar />
+        {/* <HomeSearchBar /> */}
 
         {/* Delivery Address Section */}
         <DeliveryAddressSection />

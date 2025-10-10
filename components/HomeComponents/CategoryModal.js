@@ -55,14 +55,9 @@ function CategoryModal({
   const [refreshing, setRefreshing] = useState(false);
 
   const styles = StyleSheet.create({
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: colors.modalOverlay || "rgba(0, 0, 0, 0.5)",
-    },
     modalContainer: {
       flex: 1,
       backgroundColor: colors.background,
-      marginTop: scaleVertical(40), // Status bar spacing
     },
     header: {
       ...layout.flexRow,
@@ -103,13 +98,14 @@ function CategoryModal({
       backgroundColor: colors.primary100,
     },
     productListContent: {
-      paddingHorizontal: spacing.xs,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.xl,
+      paddingHorizontal: spacing.xs * 0.5,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.lg,
     },
     columnWrapper: {
       justifyContent: "space-between",
-      marginBottom: spacing.sm,
+      marginBottom: spacing.xs,
+      paddingHorizontal: spacing.xs * 0.5,
     },
     emptyContainer: {
       flex: 1,
@@ -165,65 +161,63 @@ function CategoryModal({
       animationType="slide"
       onRequestClose={onClose}
       transparent={false}
-      statusBarTranslucent={false}
+      statusBarTranslucent={true}
     >
-      <SafeAreaView style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Pressable
-              onPress={onClose}
-              style={styles.closeButton}
-              hitSlop={8}
-              accessible={true}
-              accessibilityLabel={t("common.close") || "Close"}
-              accessibilityRole="button"
-            >
-              <Ionicons name="close" size={24} color={colors.text} />
-            </Pressable>
-            <Text
-              style={styles.headerTitle}
-              numberOfLines={1}
-              allowFontScaling={true}
-            >
-              {formattedCategoryName}
+      <SafeAreaView style={styles.modalContainer} edges={["top", "bottom"]}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable
+            onPress={onClose}
+            style={styles.closeButton}
+            hitSlop={8}
+            accessible={true}
+            accessibilityLabel={t("common.close") || "Close"}
+            accessibilityRole="button"
+          >
+            <Ionicons name="close" size={24} color={colors.text} />
+          </Pressable>
+          <Text
+            style={styles.headerTitle}
+            numberOfLines={1}
+            allowFontScaling={true}
+          >
+            {formattedCategoryName}
+          </Text>
+        </View>
+
+        {/* Product count */}
+        {totalProducts > 0 && (
+          <View style={styles.productCount}>
+            <Text style={styles.productCountText} allowFontScaling={true}>
+              {t("home.productsCount", { count: totalProducts }) ||
+                `${totalProducts} products available`}
             </Text>
           </View>
+        )}
 
-          {/* Product count */}
-          {totalProducts > 0 && (
-            <View style={styles.productCount}>
-              <Text style={styles.productCountText} allowFontScaling={true}>
-                {t("home.productsCount", { count: totalProducts }) ||
-                  `${totalProducts} products available`}
-              </Text>
-            </View>
-          )}
-
-          {/* Product grid */}
-          <FlatList
-            data={productGroups}
-            renderItem={renderProduct}
-            keyExtractor={keyExtractor}
-            numColumns={2}
-            columnWrapperStyle={styles.columnWrapper}
-            style={styles.productList}
-            contentContainerStyle={styles.productListContent}
-            ListEmptyComponent={EmptyComponent}
-            onRefresh={handleRefresh}
-            refreshing={refreshing}
-            // Performance optimizations
-            windowSize={10}
-            maxToRenderPerBatch={10}
-            initialNumToRender={6}
-            removeClippedSubviews={true}
-            updateCellsBatchingPeriod={50}
-            // Accessibility
-            accessible={true}
-            accessibilityLabel={`${formattedCategoryName} products`}
-            accessibilityRole="list"
-          />
-        </View>
+        {/* Product grid */}
+        <FlatList
+          data={productGroups}
+          renderItem={renderProduct}
+          keyExtractor={keyExtractor}
+          numColumns={2}
+          columnWrapperStyle={styles.columnWrapper}
+          style={styles.productList}
+          contentContainerStyle={styles.productListContent}
+          ListEmptyComponent={EmptyComponent}
+          onRefresh={handleRefresh}
+          refreshing={refreshing}
+          // Performance optimizations
+          windowSize={10}
+          maxToRenderPerBatch={10}
+          initialNumToRender={6}
+          removeClippedSubviews={true}
+          updateCellsBatchingPeriod={50}
+          // Accessibility
+          accessible={true}
+          accessibilityLabel={`${formattedCategoryName} products`}
+          accessibilityRole="list"
+        />
       </SafeAreaView>
     </Modal>
   );
