@@ -67,16 +67,16 @@ function HorizontalProductCard({
   const selectedProduct = products[selectedIndex];
 
   // Memoize formatted product name to avoid recalculation
-  const formattedProductName = useMemo(
-    () => formatProductName(selectedProduct.productName),
-    [selectedProduct.productName]
-  );
+  const formattedProductName = useMemo(() => {
+    const productName = selectedProduct?.productName || "";
+    return formatProductName(productName);
+  }, [selectedProduct?.productName]);
 
   // Memoize image source with improved validation
   const imageSource = useMemo(() => {
     // Check if product has a valid image URL
     if (
-      selectedProduct.imageUrl &&
+      selectedProduct?.imageUrl &&
       selectedProduct.imageUrl.trim() !== "" &&
       selectedProduct.imageUrl !== "placeholder" &&
       selectedProduct.imageUrl !== "null" &&
@@ -86,7 +86,7 @@ function HorizontalProductCard({
     }
     // Use placeholder for missing or invalid images
     return require("../../assets/placeholder.png");
-  }, [selectedProduct.imageUrl]);
+  }, [selectedProduct?.imageUrl]);
 
   // Memoized callback functions
   const handleSizeSelect = useCallback((index, product) => {
@@ -121,21 +121,26 @@ function HorizontalProductCard({
 
   // Highlight search terms in product name
   const renderProductName = (text, query) => {
-    if (!query) {
-      return <Text style={styles.normalText}>{text}</Text>;
+    // Ensure text is a string
+    const safeText = String(text || "");
+
+    if (!query || !safeText) {
+      return safeText;
     }
 
     const regex = new RegExp(`(${query})`, "gi");
-    const parts = text.split(regex);
+    const parts = safeText.split(regex);
 
-    return parts.map((part, index) => (
-      <Text
-        key={index}
-        style={regex.test(part) ? styles.highlightedText : styles.normalText}
-      >
-        {part}
-      </Text>
-    ));
+    return parts
+      .filter((part) => part && part.length > 0) // Filter out empty strings
+      .map((part, index) => (
+        <Text
+          key={`part-${index}`}
+          style={regex.test(part) ? styles.highlightedText : styles.normalText}
+        >
+          {part}
+        </Text>
+      ));
   };
 
   // Calculate responsive dimensions
@@ -345,16 +350,16 @@ function HorizontalProductCard({
         {/* Category and HSN Row */}
         {(showCategory || showHSN) && (
           <View style={styles.metaRow}>
-            {showCategory && selectedProduct.category && (
+            {showCategory && selectedProduct?.category && (
               <View style={styles.categoryContainer}>
                 <Text style={styles.category} allowFontScaling={true}>
-                  {selectedProduct.category}
+                  {String(selectedProduct.category)}
                 </Text>
               </View>
             )}
-            {showHSN && selectedProduct.HSN && (
+            {showHSN && selectedProduct?.HSN && (
               <Text style={styles.hsn} allowFontScaling={true}>
-                HSN: {selectedProduct.HSN}
+                {`HSN: ${String(selectedProduct.HSN)}`}
               </Text>
             )}
           </View>
@@ -376,20 +381,24 @@ function HorizontalProductCard({
         <View style={styles.priceRatingRow}>
           <View style={styles.priceContainer}>
             <Text style={styles.price} allowFontScaling={true}>
-              ₹{Number(selectedProduct.price).toLocaleString("en-IN")}
+              {`₹${Number(selectedProduct?.price || 0).toLocaleString(
+                "en-IN"
+              )}`}
             </Text>
-            {selectedProduct.discount > 0 && (
+            {selectedProduct?.discount > 0 && (
               <Text style={styles.discount} allowFontScaling={true}>
-                ₹{Number(selectedProduct.discount).toLocaleString("en-IN")} off
+                {`₹${Number(selectedProduct.discount).toLocaleString(
+                  "en-IN"
+                )} off`}
               </Text>
             )}
           </View>
 
-          {selectedProduct.rating && (
+          {selectedProduct?.rating && (
             <View style={styles.ratingContainer}>
               <Ionicons name="star" size={iconSizes.xs} color="#FFD700" />
               <Text style={styles.rating} allowFontScaling={true}>
-                {selectedProduct.rating}
+                {String(selectedProduct.rating)}
               </Text>
             </View>
           )}
@@ -399,9 +408,11 @@ function HorizontalProductCard({
         <View style={styles.bottomRow}>
           <View style={styles.leftContent}>
             {/* Size Information for Single Products */}
-            {products.length === 1 && selectedProduct.sizes && (
+            {products.length === 1 && selectedProduct?.sizes && (
               <Text style={styles.sizeInfo} allowFontScaling={true}>
-                {t("common.size")}: {selectedProduct.sizes}
+                {`${t("common.size") || "Size"}: ${String(
+                  selectedProduct.sizes
+                )}`}
               </Text>
             )}
           </View>
