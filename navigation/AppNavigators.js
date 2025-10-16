@@ -122,58 +122,58 @@ export function HomeStackNavigator() {
  *
  * Handles navigation between product browsing and search results.
  */
-export function AllProductsStackNavigator() {
-  const { t } = useI18n();
-  const insets = useSafeArea();
-  const deviceSize = getDeviceSize();
-  const { orientation } = useDeviceOrientation();
+// export function AllProductsStackNavigator() {
+//   const { t } = useI18n();
+//   const insets = useSafeArea();
+//   const deviceSize = getDeviceSize();
+//   const { orientation } = useDeviceOrientation();
 
-  // Orientation-aware header configuration
-  const getHeaderHeight = () => {
-    if (orientation === "landscape" && !isTablet) {
-      // Compact header for phones in landscape
-      return Math.round(scaleVertical(60)) + Math.round(insets.top);
-    }
-    const baseHeaderHeight = deviceSize === "tablet" ? 100 : 90;
-    return Math.round(scaleVertical(baseHeaderHeight)) + Math.round(insets.top);
-  };
+//   // Orientation-aware header configuration
+//   const getHeaderHeight = () => {
+//     if (orientation === "landscape" && !isTablet) {
+//       // Compact header for phones in landscape
+//       return Math.round(scaleVertical(60)) + Math.round(insets.top);
+//     }
+//     const baseHeaderHeight = deviceSize === "tablet" ? 100 : 90;
+//     return Math.round(scaleVertical(baseHeaderHeight)) + Math.round(insets.top);
+//   };
 
-  return (
-    <AllProductsStack.Navigator
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: Colors.primary300,
-          height: getHeaderHeight(),
-        },
-        headerTintColor: Colors.accent700,
-        headerSafeAreaInsets: { top: 0 }, // We handle this manually
-        headerTitleStyle: {
-          ...typography.h3,
-          fontSize:
-            orientation === "landscape" && !isTablet
-              ? typography.bodySmall.fontSize
-              : typography.h3.fontSize,
-        },
-      }}
-    >
-      <AllProductsStack.Screen
-        name="AllProductsMain"
-        component={AllProducts}
-        options={{
-          title: t("navigation.browseProducts"),
-          headerTitle: () => <SearchBarHeader />,
-        }}
-      />
-      <AllProductsStack.Screen
-        name="SearchResults"
-        component={SearchResultsScreen}
-        options={{
-          headerTitle: () => <SearchBarHeader />,
-        }}
-      />
-    </AllProductsStack.Navigator>
-  );
-}
+//   return (
+//     <AllProductsStack.Navigator
+//       screenOptions={{
+//         headerStyle: {
+//           backgroundColor: Colors.primary300,
+//           height: getHeaderHeight(),
+//         },
+//         headerTintColor: Colors.accent700,
+//         headerSafeAreaInsets: { top: 0 }, // We handle this manually
+//         headerTitleStyle: {
+//           ...typography.h3,
+//           fontSize:
+//             orientation === "landscape" && !isTablet
+//               ? typography.bodySmall.fontSize
+//               : typography.h3.fontSize,
+//         },
+//       }}
+//     >
+//       <AllProductsStack.Screen
+//         name="AllProductsMain"
+//         component={AllProducts}
+//         options={{
+//           title: t("navigation.browseProducts"),
+//           headerTitle: () => <SearchBarHeader />,
+//         }}
+//       />
+//       <AllProductsStack.Screen
+//         name="SearchResults"
+//         component={SearchResultsScreen}
+//         options={{
+//           headerTitle: () => <SearchBarHeader />,
+//         }}
+//       />
+//     </AllProductsStack.Navigator>
+//   );
+// }
 
 /**
  * Cart Stack Navigator
@@ -528,7 +528,7 @@ export function BottomTabsOverview() {
           headerShown: false,
         }}
       />
-      <BottomTabs.Screen
+      {/* <BottomTabs.Screen
         name="AllProductsScreen"
         component={AllProductsStackNavigator}
         options={{
@@ -550,7 +550,7 @@ export function BottomTabsOverview() {
           },
           headerShown: false,
         }}
-      />
+      /> */}
       <BottomTabs.Screen
         name="CartScreen"
         component={CartStackNavigator}
