@@ -91,6 +91,14 @@ function ProductsContextProvider({ children }) {
         // console.log("🛍️ Starting to fetch products...");
 
         const fetchedProductsData = await readCollection("products");
+        // // // console log products data
+        // const productsArray = Array.isArray(fetchedProductsData)
+        //   ? fetchedProductsData
+        //   : [];
+        // console.log(
+        //   "🔍 Fetched products data (first 50):",
+        //   productsArray.slice(0, 50)
+        // );
 
         if (fetchedProductsData && fetchedProductsData.length > 0) {
           setProducts(fetchedProductsData);
