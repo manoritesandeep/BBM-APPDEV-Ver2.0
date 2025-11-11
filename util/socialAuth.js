@@ -48,16 +48,19 @@ export const signInWithGoogle = async () => {
     );
 
     // Get Firebase auth instance safely
-    const auth = await getFirebaseAuth();
-    if (!auth) {
+    const authInstance = await getFirebaseAuth();
+    if (!authInstance) {
       throw new Error("Firebase Auth is not available");
     }
 
     // Create Firebase credential with Google ID token
+    // Use the imported auth module to access GoogleAuthProvider
     const googleCredential = auth.GoogleAuthProvider.credential(idToken);
 
     // Sign in with Firebase using Google credential
-    const userCredential = await auth().signInWithCredential(googleCredential);
+    const userCredential = await authInstance.signInWithCredential(
+      googleCredential
+    );
     const user = userCredential.user;
 
     console.log("✅ Firebase authentication successful");
