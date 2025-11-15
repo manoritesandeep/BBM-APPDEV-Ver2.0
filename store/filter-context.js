@@ -7,7 +7,7 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
-import { DUMMY_PRODUCTS } from "../data/dummy-data";
+import { ProductsContext } from "./products-context";
 
 // Filter Context
 export const FilterContext = createContext({
@@ -346,12 +346,16 @@ function filterReducer(state, action) {
 }
 
 // Filter Context Provider
-export function FilterContextProvider({ children, products = DUMMY_PRODUCTS }) {
+export function FilterContextProvider({ children, products }) {
   const [state, dispatch] = useReducer(filterReducer, initialState);
+  const productsCtx = useContext(ProductsContext);
+
+  // Use provided products or fall back to ProductsContext
+  const activeProducts = products ?? productsCtx.products ?? [];
 
   // Memoized product filtering logic
   const { filteredProducts, availableFilters, filterCounts } = useMemo(() => {
-    let filtered = [...products];
+    let filtered = [...activeProducts];
 
     // Apply search query first if exists
     if (state.searchQuery) {
@@ -579,7 +583,7 @@ export function FilterContextProvider({ children, products = DUMMY_PRODUCTS }) {
       filterCounts: counts,
     };
   }, [
-    products,
+    activeProducts,
     state.activeFilters,
     state.selectedCategory,
     state.searchQuery,

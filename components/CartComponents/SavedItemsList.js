@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { SavedItemsContext } from "../../store/saved-items-context";
 import { CartContext } from "../../store/cart-context";
+import { ProductsContext } from "../../store/products-context";
 import { useToast } from "../UI/ToastProvider";
 import LoadingState from "../UI/LoadingState";
 import { Colors } from "../../constants/styles";
@@ -23,11 +24,11 @@ import {
   iconSizes,
   scaleSize,
 } from "../../constants/responsive";
-import { DUMMY_PRODUCTS } from "../../data/dummy-data";
 
 function SavedItemsList() {
   const savedItemsCtx = useContext(SavedItemsContext);
   const cartCtx = useContext(CartContext);
+  const productsCtx = useContext(ProductsContext);
   const { showToast } = useToast();
   const navigation = useNavigation();
   const [expanded, setExpanded] = useState(false);
@@ -42,8 +43,8 @@ function SavedItemsList() {
 
   const handleAddToCart = async (savedItem) => {
     try {
-      // Find current product data from DUMMY_PRODUCTS
-      const currentProduct = DUMMY_PRODUCTS.find(
+      // Find current product data from ProductsContext
+      const currentProduct = productsCtx.products.find(
         (p) => p.id === savedItem.productId
       );
 
@@ -76,7 +77,7 @@ function SavedItemsList() {
   };
 
   const getPriceComparison = (savedItem) => {
-    const currentProduct = DUMMY_PRODUCTS.find(
+    const currentProduct = productsCtx.products.find(
       (p) => p.id === savedItem.productId
     );
 
@@ -126,7 +127,9 @@ function SavedItemsList() {
 
   const renderSavedItem = ({ item }) => {
     const priceInfo = getPriceComparison(item);
-    const currentProduct = DUMMY_PRODUCTS.find((p) => p.id === item.productId);
+    const currentProduct = productsCtx.products.find(
+      (p) => p.id === item.productId
+    );
 
     return (
       <View style={styles.savedItem}>

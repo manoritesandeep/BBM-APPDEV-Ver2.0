@@ -17,7 +17,7 @@ const COLLECTION_NAME = "savedItems";
 /**
  * Add a product to saved items
  * @param {string} userId - User ID
- * @param {object} product - Product object from DUMMY_PRODUCTS
+ * @param {object} product - Product object with id, name, price, etc.
  * @returns {Promise<object>} - Saved item document
  */
 export const addToSavedItems = async (userId, product) => {
@@ -31,7 +31,7 @@ export const addToSavedItems = async (userId, product) => {
     // Create saved item document
     const savedItemData = {
       userId,
-      productId: product.id, // Use 'id' field from DUMMY_PRODUCTS
+      productId: product.id, // Use 'id' field from product object
       productNum: product.productNum,
       productName: product.productName,
       HSN: product.HSN || "",

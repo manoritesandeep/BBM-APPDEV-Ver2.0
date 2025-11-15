@@ -2,17 +2,21 @@ import { useContext, useCallback, useMemo } from "react";
 import { Alert } from "react-native";
 import { SavedItemsContext } from "../../../store/saved-items-context";
 import { CartContext } from "../../../store/cart-context";
+import { ProductsContext } from "../../../store/products-context";
 import { Colors } from "../../../constants/styles";
-import { DUMMY_PRODUCTS } from "../../../data/dummy-data";
 
 export function useSavedItemsLogic(showToast) {
   const savedItemsCtx = useContext(SavedItemsContext);
   const cartCtx = useContext(CartContext);
+  const productsCtx = useContext(ProductsContext);
 
   // Memoize the product lookup function to avoid creating new instances
-  const getProductById = useCallback((productId) => {
-    return DUMMY_PRODUCTS.find((p) => p.id === productId);
-  }, []);
+  const getProductById = useCallback(
+    (productId) => {
+      return productsCtx.products.find((p) => p.id === productId);
+    },
+    [productsCtx.products]
+  );
 
   // Memoize the price comparison function to avoid recalculations
   const getPriceComparison = useCallback(
