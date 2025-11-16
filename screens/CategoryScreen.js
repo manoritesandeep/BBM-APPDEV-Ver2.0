@@ -331,20 +331,17 @@ function CategoryScreenContent({ route, navigation }) {
       {totalProducts > 0 && (
         <View style={styles.productCount}>
           <Text style={styles.productCountText} allowFontScaling={true}>
-            {totalProducts} {totalProducts === 1 ? "product" : "products"}
-            {categorySearchQuery && categorySearchQuery.trim().length >= 2 && (
-              <Text style={styles.searchInfo}>
-                {" "}
-                for "{categorySearchQuery}"
-              </Text>
-            )}
-            {appliedFiltersCount > 0 && (
-              <Text style={styles.filterInfo}>
-                {" "}
-                • {appliedFiltersCount} filter
-                {appliedFiltersCount !== 1 ? "s" : ""} applied
-              </Text>
-            )}
+            {`${totalProducts} ${totalProducts === 1 ? "product" : "products"}${
+              categorySearchQuery && categorySearchQuery.trim().length >= 2
+                ? ` for "${categorySearchQuery}"`
+                : ""
+            }${
+              appliedFiltersCount > 0
+                ? ` • ${appliedFiltersCount} filter${
+                    appliedFiltersCount !== 1 ? "s" : ""
+                  } applied`
+                : ""
+            }`}
           </Text>
         </View>
       )}

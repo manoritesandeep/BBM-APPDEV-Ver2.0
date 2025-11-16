@@ -61,8 +61,42 @@ function HorizontalProductCard({
   const cartCtx = useContext(CartContext);
   const { showToast } = useToast();
 
-  // Handle both single products and product groups
-  const products = Array.isArray(productGroup) ? productGroup : [productGroup];
+  // Validate and handle product group - ensure it's always an array of valid products
+  const products = useMemo(() => {
+    // Handle both single products and product groups
+    if (!productGroup) {
+      console.warn("HorizontalProductCard: productGroup is null or undefined");
+      return [];
+    }
+
+    if (Array.isArray(productGroup)) {
+      // Filter out any invalid products
+      return productGroup.filter(
+        (p) => p && typeof p === "object" && p.id && p.productName
+      );
+    }
+
+    // Single product - validate it
+    if (
+      typeof productGroup === "object" &&
+      productGroup.id &&
+      productGroup.productName
+    ) {
+      return [productGroup];
+    }
+
+    console.warn(
+      "HorizontalProductCard: Invalid productGroup format",
+      productGroup
+    );
+    return [];
+  }, [productGroup]);
+
+  // Early exit if no valid products
+  if (products.length === 0) {
+    return null;
+  }
+
   const [selectedIndex, setSelectedIndex] = useState(0);
   const selectedProduct = products[selectedIndex];
 
@@ -71,6 +105,10 @@ function HorizontalProductCard({
     const productName = selectedProduct?.productName || "";
     return formatProductName(productName);
   }, [selectedProduct?.productName]);
+
+  // Check if we should show search highlighting
+  // (Note: Highlighting is disabled due to React Native Text rendering constraints)
+  // The search parameter is used by the parent screen for filtering
 
   // Memoize image source with improved validation
   const imageSource = useMemo(() => {
@@ -118,30 +156,6 @@ function HorizontalProductCard({
       showToast(`${formattedProductName} added to cart`, "success");
     }
   }, [onAddToCart, selectedProduct, cartCtx, formattedProductName, showToast]);
-
-  // Highlight search terms in product name
-  const renderProductName = (text, query) => {
-    // Ensure text is a string
-    const safeText = String(text || "");
-
-    if (!query || !safeText) {
-      return safeText;
-    }
-
-    const regex = new RegExp(`(${query})`, "gi");
-    const parts = safeText.split(regex);
-
-    return parts
-      .filter((part) => part && part.length > 0) // Filter out empty strings
-      .map((part, index) => (
-        <Text
-          key={`part-${index}`}
-          style={regex.test(part) ? styles.highlightedText : styles.normalText}
-        >
-          {part}
-        </Text>
-      ));
-  };
 
   // Calculate responsive dimensions
   const cardWidth = screenWidth - spacing.md * 2;
@@ -344,7 +358,7 @@ function HorizontalProductCard({
           numberOfLines={2}
           allowFontScaling={true}
         >
-          {renderProductName(formattedProductName, searchQuery)}
+          {formattedProductName}
         </Text>
 
         {/* Category and HSN Row */}
@@ -353,7 +367,7 @@ function HorizontalProductCard({
             {showCategory && selectedProduct?.category && (
               <View style={styles.categoryContainer}>
                 <Text style={styles.category} allowFontScaling={true}>
-                  {String(selectedProduct.category)}
+                  {`${String(selectedProduct.category)}`}
                 </Text>
               </View>
             )}

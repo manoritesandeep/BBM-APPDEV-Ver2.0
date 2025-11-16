@@ -236,11 +236,11 @@ function OrderDetailsModal({
                       {String(item.productName || "")}
                     </Text>
                     <Text style={styles.itemMeta}>
-                      {t("orders.quantity")}:{" "}
+                      {`${t("orders.quantity")}: `}
                       <Text style={styles.itemQty}>
                         {String(item.quantity || "")}
-                      </Text>{" "}
-                      | ₹{String(item.price || "")}
+                      </Text>
+                      {` | ₹${String(item.price || "")}`}
                     </Text>
                   </View>
                 </View>
@@ -295,9 +295,9 @@ function OrderDetailsModal({
             )}
 
             <Text style={styles.total}>
-              {t("user.orderTotal")}:{" "}
+              {`${t("user.orderTotal")}: `}
               <Text style={styles.totalAmount}>
-                ₹{String(order.total || "")}
+                {`₹${String(order.total || "")}`}
               </Text>
             </Text>
 

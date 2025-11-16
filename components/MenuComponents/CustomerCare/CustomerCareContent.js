@@ -5,8 +5,10 @@ function CustomerCareContent() {
     <View style={styles.contentBox}>
       <Text style={styles.contentTitle}>Customer Care</Text>
       <Text style={styles.contentText}>
-        Call us at <Text style={styles.bold}>1800-123-4567</Text>
-        {"\n"}or email <Text style={styles.bold}>support@bbmart.com</Text>
+        {`Call us at `}
+        <Text style={styles.bold}>1800-123-4567</Text>
+        {`\nor email `}
+        <Text style={styles.bold}>support@bbmart.com</Text>
       </Text>
     </View>
   );

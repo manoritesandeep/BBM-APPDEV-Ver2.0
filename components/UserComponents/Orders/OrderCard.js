@@ -62,8 +62,8 @@ function OrderCard({ order, onPress }) {
             </Text>
           )}
           <Text style={styles.totalText}>
-            {t("user.orderTotal")}:{" "}
-            <Text style={styles.totalAmount}>₹{order.total}</Text>
+            {`${t("user.orderTotal")}: `}
+            <Text style={styles.totalAmount}>{`₹${order.total}`}</Text>
           </Text>
 
           {/* Compact Order Tracking */}
